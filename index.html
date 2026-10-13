@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Placar do Pregão</title>
+<meta name="description" content="Gerador dos vídeos diários e semanais de resultado dos alunos da Trader School.">
+<meta name="theme-color" content="#0A0A0B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Placar">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-64.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="appbar">
+  <div class="brand"><img src="icons/icon-192.png" alt="" width="36" height="36"><div><strong>Placar do Pregão</strong><span>Trader School · resultados dos alunos</span></div></div>
+  <div class="appbar-actions">
+    <button type="button" class="ghost" id="installBtn" hidden>Instalar app</button>
+    <span class="saved" id="saved" role="status">Carregando…</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="col-stage" aria-label="Vídeo">
+    <canvas id="cv" width="540" height="960" role="img" aria-label="Prévia do vídeo"></canvas>
+    <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+    <div class="ctrl">
+      <button type="button" id="play">Tocar prévia</button>
+      <button type="button" class="primary" id="rec">Gerar vídeo</button>
+    </div>
+    <div class="ready" id="ready" hidden>
+      <strong id="readyName">Vídeo pronto</strong>
+      <div class="ctrl">
+        <button type="button" class="primary" id="dl">Baixar vídeo</button>
+        <button type="button" id="share" hidden>Salvar no celular / compartilhar</button>
+      </div>
+    </div>
+    <label class="toggle"><input type="checkbox" id="guides"> Mostrar áreas que o Reels cobre (só na prévia)</label>
+    <p class="status" id="status" role="status"></p>
+    <p class="note">MP4 1080×1920, 30 quadros, sem áudio, pronto pra trilha no CapCut. Cada dia da semana tem capa, cenário e transição próprios.</p>
+  </section>
+
+  <section class="col-edit" aria-label="Painel">
+    <div class="weeknav">
+      <button type="button" class="icon" id="prevWeek" aria-label="Semana anterior">‹</button>
+      <div class="weeklabel"><span id="weekLabel">Esta semana</span><button type="button" class="link" id="thisWeek" hidden>Voltar para esta semana</button></div>
+      <button type="button" class="icon" id="nextWeek" aria-label="Próxima semana">›</button>
+    </div>
+    <div class="tabs" id="tabs" role="group" aria-label="Dia do vídeo"></div>
+    <h2 id="panelTitle">Turma do dia</h2>
+
+    <div id="dayPanel">
+      <p class="note">Marque quem operou, digite o valor com centavos (ex.: 1.274,50), envie o print e toque no resultado. O maior valor abre como Destaque do Dia. Os prints recebem uma melhoria automática de nitidez e contraste. Tudo é salvo sozinho neste aparelho.</p>
+      <div class="list" id="list"></div>
+      <div class="ctrl">
+        <button type="button" id="add">Adicionar aluno</button>
+        <button type="button" id="clearDay">Limpar este dia</button>
+      </div>
+    </div>
+
+    <div id="weekPanel" hidden>
+      <div class="week">
+        <div><span class="note">Total da semana</span><div class="big" id="weekTotal">R$ 0,00</div></div>
+        <div class="wtable" id="weekTable"></div>
+        <p class="note">Soma os resultados lançados de segunda a sexta desta semana. O vídeo mostra o total por dia, o pódio, o ranking e o total da semana.</p>
+      </div>
+    </div>
+
+    <details class="backup">
+      <summary>Backup e troca de aparelho</summary>
+      <p class="note">Os dados ficam salvos neste aparelho. Para levar tudo do computador para o celular (ou guardar uma cópia), faça um backup aqui e restaure no outro aparelho.</p>
+      <div class="ctrl">
+        <button type="button" id="backup">Fazer backup</button>
+        <label class="btn">Restaurar backup<input type="file" id="restore" accept="application/json,.json" hidden></label>
+      </div>
+    </details>
+  </section>
+</main>
+
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button type="button" class="primary" id="toastBtn" hidden>Atualizar</button></div>
+
+<script src="vendor/mp4-muxer.js"></script>
+<script src="js/store.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

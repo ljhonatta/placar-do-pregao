@@ -1,0 +1,19 @@
+{
+  "name": "Placar do Pregão · Trader School",
+  "short_name": "Placar",
+  "description": "Gerador dos vídeos diários e semanais de resultado dos alunos da Trader School.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0A0A0B",
+  "theme_color": "#0A0A0B",
+  "lang": "pt-BR",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
