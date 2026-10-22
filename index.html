@@ -51,6 +51,14 @@
     <label class="toggle"><input type="checkbox" id="sfx" checked> Gerar também o áudio dos efeitos sonoros (arquivo separado para o CapCut)</label>
     <label class="toggle"><input type="checkbox" id="guides"> Mostrar áreas que o Reels cobre (só na prévia)</label>
     <p class="status" id="status" role="status"></p>
+    <div class="caption" id="capBox" hidden>
+      <strong>Legenda pronta do post</strong>
+      <textarea id="cap" rows="14" spellcheck="false" aria-label="Legenda do post"></textarea>
+      <div class="ctrl">
+        <button type="button" class="primary" id="copyCap">Copiar legenda</button>
+        <button type="button" id="newCap">Outra versão</button>
+      </div>
+    </div>
     <p class="note">MP4 1080×1920, 30 quadros, sem áudio (roda liso). Os efeitos sonoros vêm num arquivo .wav separado, já sincronizado: no CapCut, coloque o áudio no início do vídeo. Estilo editorial: cada dia tem objeto de capa, frases e transição próprios.</p>
   </section>
 
@@ -97,6 +105,7 @@
 <script src="js/store.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/sfx.js"></script>
+<script src="js/caption.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

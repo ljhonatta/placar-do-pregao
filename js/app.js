@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='3.6.0';
+const APP_VERSION='3.7.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -69,10 +69,16 @@ function runTimeline(startAt=0,sound=false){ const id=++loopId, D=dur(); let t0=
   if(sound&&AC&&sfxOn()&&(typeof SFX!=='undefined')){ const tStart=performance.now(); SFX.render(cueList(),D,curDay).then(buf=>{ if(!buf||id!==loopId) return; const off=startAt+(performance.now()-tStart)/1000; if(off>=D) return; ASRC=AC.createBufferSource(); ASRC.buffer=buf; ASRC.connect(AC.destination); ASRC.start(0,off); }).catch(()=>{}); }
   (function f(now){ if(id!==loopId) return; if(t0===null) t0=now-startAt*1000; const t=(now-t0)/1000; draw(Math.min(t,D)); $('prog').style.width=(D?Math.min(100,t/D*100):0)+'%'; if(t<D) requestAnimationFrame(f); })(performance.now()); }
 let prevReq=0;
+/* legenda pronta */
+let capVariant=0, capDay='';
+function updateCaption(){ if(typeof buildCaption!=='function') return; if(capDay!==curDay){ capVariant=0; capDay=curDay; } let t=''; try{ t=buildCaption(capVariant); }catch(e){ t=''; } $('cap').value=t; $('capBox').hidden=!t; }
+$('newCap').onclick=()=>{ capVariant++; updateCaption(); };
+$('copyCap').onclick=async()=>{ const t=$('cap').value; let ok=false; try{ await navigator.clipboard.writeText(t); ok=true; }catch(e){ try{ $('cap').select(); ok=document.execCommand('copy'); }catch(e2){} } status(ok?'Legenda copiada. É só colar no Instagram.':'Selecione o texto e copie manualmente.',!ok); };
 async function preview(focusId,sound=false){ if(busy) return; const req=++prevReq; await prepare(); if(req!==prevReq) return;
-  if(!SCENES.length){ loopId++; draw(0); status(MODE==='week'?'Ainda não há resultados lançados nesta semana.':'Marque pelo menos um aluno em "Operou hoje".',true); return; }
+  if(!SCENES.length){ $('capBox').hidden=true; loopId++; draw(0); status(MODE==='week'?'Ainda não há resultados lançados nesta semana.':'Marque pelo menos um aluno em "Operou hoje".',true); return; }
   if(MODE==='week') status('Semana '+WK.range+' · '+WK.rank.length+' alunos · '+Math.round(dur())+' s de vídeo');
   else status(THEMES[curDay].label+' · Destaque: '+S[0].name+' · '+S.length+(S.length>1?' alunos':' aluno')+' · '+Math.round(dur())+' s de vídeo');
+  updateCaption();
   let start=0; if(typeof focusId==='string'){ const idx=S.findIndex(s=>s.id===focusId); if(idx>=0) start=sceneStart(idx+2); }
   runTimeline(start,sound); }
 
