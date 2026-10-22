@@ -62,18 +62,18 @@ const PALS={
   sex:{name:'preto, branco e laranja', bg:['#26262B','#060607'], dark:true, shade:'255,255,255', ink:WH, ink2:'#E7E5E1', grey:'#9C9893', accent:O, accentD:'#5A2200', depth:'#000',
        card:'#FAFAF9', cardInk:K, cardSub:'#6E6B67', cardAccent:O, plate:['#FF7A26','#E35500'], plateSide:'#9C3600', plateText:K, plateSub:'#4A1E04', plateAccent:WH, solid:WH, onSolid:K, logoDark:false, disc:'#77736E'},
   sab:{name:'laranja com branco e preto', bg:['#FF8A3D','#C94400'], dark:false, shade:'0,0,0', ink:K, ink2:'#1E0C02', grey:'#3A1503', accent:WH, accentD:'#7A2C00', depth:'#5A2000',
-       card:'#FAFAF9', cardInk:K, cardSub:'#6E6B67', cardAccent:O, plate:['#1C1C20','#0B0B0D'], plateSide:'#000', plateText:WH, plateSub:'#9A9792', plateAccent:O, solid:K, onSolid:WH, logoDark:true, disc:'#4A1E04'}
+       card:'#FAFAF9', cardInk:K, cardSub:'#6E6B67', cardAccent:O, plate:['#1C1C20','#0B0B0D'], plateSide:'#000', plateText:WH, plateSub:'#9A9792', plateAccent:O, solid:K, onSolid:WH, logoDark:false, disc:'#4A1E04'}
 };
 let P=PALS.seg;
 
 /* ---------- identidade de cada dia: objeto de capa, frases, transição, luz ---------- */
 const DAYCFG={
-  seg:{cover:'toggle', hero:'emblem', trans:'focus', light:-.32, l1:'O resultado de', tag:'dos nossos alunos', quote:['Disciplina é a ponte','entre metas e conquistas.'], open:['Começando a semana,','Mais um no lucro,','Na sequência,','Firme no processo,']},
-  ter:{cover:'cycle', hero:'money',  trans:'bars',  light:.28,  l1:'O resultado de', tag:'dos nossos alunos', quote:['Grandes resultados nascem','de decisões repetidas.'], open:['Terça de resultado,','Também no lucro,','Mais um,','Seguindo firme,']},
-  qua:{hero:'coin',   trans:'flip',  light:-.22, l1:'O resultado de', tag:'dos nossos alunos', quote:['Quem planta com constância','colhe com abundância.'], open:['Meio da semana,','A turma não para,','Mais um no lucro,','Na sequência,']},
-  qui:{cover:'toggle', hero:'book',   trans:'square', light:.36,  l1:'O resultado de', tag:'dos nossos alunos', quote:['O mercado premia','quem respeita o processo.'], open:['Quinta de lucro,','Consistência,','Mais um,','Firme no plano,']},
-  sex:{hero:'news',   trans:'shatter', light:-.4,  l1:'O resultado de', tag:'dos nossos alunos', quote:['Fechar bem a semana','é consequência, não sorte.'], open:['Fechando a semana,','Mais um no topo,','Na sequência,','Também no lucro,']},
-  sab:{hero:'pendulum',trans:'zoom',light:.3,   l1:'O resultado da', tag:'de toda a turma', quote:['Uma turma. Um propósito.','Um resultado.'], open:[]}
+  seg:{motion:'lift', accent:'spark', cover:'toggle', hero:'emblem', trans:'focus', light:-.32, l1:'O resultado de', tag:'dos nossos alunos', quote:['Disciplina é a ponte','entre metas e conquistas.'], open:['Começando a semana,','Mais um no lucro,','Na sequência,','Firme no processo,']},
+  ter:{motion:'slide3d', accent:'ellipse', cover:'cycle', hero:'money',  trans:'bars',  light:.28,  l1:'O resultado de', tag:'dos nossos alunos', quote:['Grandes resultados nascem','de decisões repetidas.'], open:['Terça de resultado,','Também no lucro,','Mais um,','Seguindo firme,']},
+  qua:{motion:'flip3d', accent:'brackets', hero:'coin',   trans:'flip',  light:-.22, l1:'O resultado de', tag:'dos nossos alunos', quote:['Quem planta com constância','colhe com abundância.'], open:['Meio da semana,','A turma não para,','Mais um no lucro,','Na sequência,']},
+  qui:{motion:'drop', accent:'hash', cover:'toggle', hero:'book',   trans:'square', light:.36,  l1:'O resultado de', tag:'dos nossos alunos', quote:['O mercado premia','quem respeita o processo.'], open:['Quinta de lucro,','Consistência,','Mais um,','Firme no plano,']},
+  sex:{motion:'zoomin', accent:'glow', hero:'news',   trans:'shatter', light:-.4,  l1:'O resultado de', tag:'dos nossos alunos', quote:['Fechar bem a semana','é consequência, não sorte.'], open:['Fechando a semana,','Mais um no topo,','Na sequência,','Também no lucro,']},
+  sab:{motion:'zoomin', accent:'glow', hero:'pendulum',trans:'zoom',light:.3,   l1:'O resultado da', tag:'de toda a turma', quote:['Uma turma. Um propósito.','Um resultado.'], open:[]}
 };
 let D=DAYCFG.seg;
 function useDay(d){ D=DAYCFG[d]||DAYCFG.seg; P=PALS[d]||PALS.seg; }
@@ -141,8 +141,8 @@ function cycleTag(c,words,cx,cy,font,t,t0,step=.55){ const a=seg(t,t0,t0+.3); if
   const w=tw(c,s,font,1)+44, h=parseInt(font.match(/(\d+)px/)[1])*1.45; c.save(); c.globalAlpha*=a; shadowOn(c,16,6,.2); rr(c,cx-w/2,cy-h/2,w,h,10); c.fillStyle=P.solid; c.fill(); shadowOff(c);
   c.beginPath(); c.rect(cx-w/2,cy-h/2,w,h); c.clip(); txt(c,s,cx,cy+2+(1-eo(q))*h,font,P.onSolid,'center',1); c.restore(); }
 /* fotos orbitando num círculo pontilhado */
-function orbit(c,imgs,cx,cy,r,t,a){ if(a<=0||!imgs.length) return; c.save(); c.globalAlpha*=a; c.strokeStyle=P.ink; c.globalAlpha*=.35; c.lineWidth=2; c.setLineDash([2,9]); c.beginPath(); c.ellipse(cx,cy,r,r*.62,0,0,7); c.stroke(); c.setLineDash([]); c.restore();
-  imgs.slice(0,6).forEach((im,k)=>{ const an=t*.55+k/Math.min(6,imgs.length)*Math.PI*2, x=cx+Math.cos(an)*r, y=cy+Math.sin(an)*r*.62, s=.82+.18*Math.sin(an); c.save(); c.globalAlpha*=a; c.translate(x,y); c.scale(s,s); c.rotate(Math.sin(an)*.15); shadowOn(c,20,10,.3); rr(c,-46,-46,92,92,22); c.fillStyle=WH; c.fill(); shadowOff(c);
+function orbit(c,imgs,cx,cy,r,t,a,fy=.62){ if(a<=0||!imgs.length) return; c.save(); c.globalAlpha*=a; c.strokeStyle=P.ink; c.globalAlpha*=.35; c.lineWidth=2; c.setLineDash([2,9]); c.beginPath(); c.ellipse(cx,cy,r,r*fy,0,0,7); c.stroke(); c.setLineDash([]); c.restore();
+  imgs.slice(0,6).forEach((im,k)=>{ const an=t*.55+k/Math.min(6,imgs.length)*Math.PI*2, x=cx+Math.cos(an)*r, y=cy+Math.sin(an)*r*fy, s=.82+.18*Math.sin(an); c.save(); c.globalAlpha*=a; c.translate(x,y); c.scale(s,s); c.rotate(Math.sin(an)*.15); shadowOn(c,20,10,.3); rr(c,-46,-46,92,92,22); c.fillStyle=WH; c.fill(); shadowOff(c);
     c.save(); rr(c,-40,-40,80,80,18); c.clip(); if(im) cover(c,im,-40,-40,80,80); else silhouette(c,0,0,40); c.restore(); c.restore(); }); }
 /* barra de progresso com marcador */
 function slider(c,x1,x2,y,p,col,track){ c.save(); c.strokeStyle=track; c.lineWidth=4; c.lineCap='round'; c.beginPath(); c.moveTo(x1,y); c.lineTo(x2,y); c.stroke(); c.strokeStyle=col; c.beginPath(); c.moveTo(x1,y); c.lineTo(x1+(x2-x1)*p,y); c.stroke();
@@ -287,24 +287,50 @@ function sceneCover(c,t){
   sparkle(c,880,470,22,eo(seg(t,1,1.4))); sparkle(c,200,1180,16,eo(seg(t,1.3,1.7))); plus(c,940,980,14,eo(seg(t,1.2,1.6))); plus(c,150,860,14,eo(seg(t,1.4,1.8)));
 }
 /* destaque do dia */
-function sceneHL(c,t){ const s=S[0];
-  reveal(c,'O destaque',540,410,fSerif(60),P.ink2,t,.1,{mode:'ghost'});
-  reveal(c,'DO DIA',540,490,fBlack(86),P.ink,t,.35,{mode:'rise',big:true});
-  orbit(c,S.slice(1).map(s=>s._a),540,770,360,t,eo(seg(t,.9,1.5)));
-  const k=back(seg(t,.3,1.0)); if(k>0){ c.save(); c.translate(540,770); c.scale(k,k); shadowOn(c,60,30,.35); c.fillStyle=P.solid; c.beginPath(); c.arc(0,0,214,0,7); c.fill(); shadowOff(c);
-    const bk=seg(t,.3,.9); if(s._a){ c.save(); c.beginPath(); c.arc(0,0,200,0,7); c.clip(); if(bk<1&&s._at){ c.globalAlpha*=1-bk; cover(c,s._at,-220,-220,440,440); c.globalAlpha=bk; } cover(c,s._a,-220,-220,440,440); c.restore(); } else avatar(c,null,0,0,200); c.restore(); dashRing(c,540,770,262*k,t,O,5,.3); }
-  sparkle(c,840,560,24,eo(seg(t,.9,1.3))); plus(c,240,610,16,eo(seg(t,1,1.4))); plus(c,860,960,16,eo(seg(t,1.1,1.5)));
-  reveal(c,'Parabéns,',540,1060,fSerif(64),P.ink2,t,1.0,{mode:'ghost'});
-  const nm=s.name.toUpperCase(), nf=fBlack(fitF(c,nm,860,fBlack,120)), nw=tw(c,nm,nf);
-  reveal(c,nm,540,1150,nf,P.ink,t,1.25,{mode:'rise',big:true});
-  selectBox(c,540-nw/2-22,1092,nw+44,118,eo(seg(t,1.6,1.9))*(1-seg(t,3.2,3.6)),P.accent);
-  tagBox(c,'+'+brl(s.value),540,1272,fBlack(fitF(c,'+'+brl(s.value),760,fBlack,64)),t,1.9,P.solid===WH?O:P.solid,P.solid===WH?K:P.onSolid);
-  reveal(c,D.quote[0],540,1370,fSerif(36),P.grey,t,2.3,{mode:'ghost'}); reveal(c,D.quote[1],540,1416,fSerif(36),P.grey,t,2.5,{mode:'ghost'});
+function sceneHL(c,t){ const s=S[0], CY=790;
+  reveal(c,'O destaque',540,402,fSerif(58),P.ink2,t,.1,{mode:'ghost'});
+  reveal(c,'DO DIA',540,476,fBlack(80),P.ink,t,.35,{mode:'rise',big:true});
+  orbit(c,S.slice(1).map(s=>s._a),540,CY,330,t,eo(seg(t,.9,1.5)),.5);
+  const k=back(seg(t,.3,1.0)); if(k>0){ c.save(); c.translate(540,CY); c.scale(k,k); shadowOn(c,60,30,.35); c.fillStyle=P.solid; c.beginPath(); c.arc(0,0,192,0,7); c.fill(); shadowOff(c);
+    const bk=seg(t,.3,.9); if(s._a){ c.save(); c.beginPath(); c.arc(0,0,180,0,7); c.clip(); if(bk<1&&s._at){ c.globalAlpha*=1-bk; cover(c,s._at,-198,-198,396,396); c.globalAlpha=bk; } cover(c,s._a,-198,-198,396,396); c.restore(); } else avatar(c,null,0,0,180); c.restore(); dashRing(c,540,CY,224*k,t,O,5,.3); }
+  sparkle(c,850,600,22,eo(seg(t,.9,1.3))); plus(c,220,640,14,eo(seg(t,1,1.4))); plus(c,870,960,14,eo(seg(t,1.1,1.5)));
+  reveal(c,'Parabéns,',540,1072,fSerif(62),P.ink2,t,1.0,{mode:'ghost'});
+  const nm=s.name.toUpperCase(), nf=fBlack(fitF(c,nm,860,fBlack,112)), nw=tw(c,nm,nf);
+  reveal(c,nm,540,1160,nf,P.ink,t,1.25,{mode:'rise',big:true});
+  selectBox(c,540-nw/2-22,1104,nw+44,112,eo(seg(t,1.6,1.9))*(1-seg(t,3.2,3.6)),P.accent);
+  tagBox(c,'+'+brl(s.value),540,1280,fBlack(fitF(c,'+'+brl(s.value),760,fBlack,62)),t,1.9,P.solid===WH?O:P.solid,P.solid===WH?K:P.onSolid);
+  reveal(c,D.quote[0],540,1376,fSerif(34),P.grey,t,2.3,{mode:'ghost'}); reveal(c,D.quote[1],540,1420,fSerif(34),P.grey,t,2.5,{mode:'ghost'});
 }
+/* entrada do cartão: cada dia com um movimento */
+function cardIn(c,u,i,cy,k,tilt){ const m=D.motion, sd=i%2?1:-1;
+  if(m==='slide3d'){ const q=eo(seg(u,0,.7)); c.translate(540+(1-q)*760*sd,cy); c.transform(.7+.3*q,(1-q)*-.22*sd,0,1,0,0); c.translate(-540,-cy); return; }
+  if(m==='flip3d'){ const q=back(seg(u,0,.75)), sx=Math.max(.03,Math.min(1.04,q)); c.translate(540,cy); c.transform(sx,(1-Math.min(1,q))*.16*sd,0,1,0,0); c.translate(-540,-cy); return; }
+  if(m==='drop'){ const q=back(seg(u,0,.7)); c.translate(540,cy-(1-q)*1000); c.rotate((1-q)*.3*sd); c.translate(-540,-cy); return; }
+  if(m==='zoomin'){ const q=eo(seg(u,0,.6)), z=1.45-.45*q; c.translate(540,cy); c.scale(z,z); c.rotate((1-q)*.05*sd); c.translate(-540,-cy); return; }
+  c.translate(540,cy+(1-k)*140); c.rotate(tilt); c.translate(-540,-cy); }
+/* lupa: entra pelo canto, para sobre o "Res. do Dia" e amplia o valor */
+function magnifier(c,s,px,py,pw,ph,zp,u){ const a=eo(seg(u,1.45,2.05))*(1-eo(seg(u,3.7,4.2))); if(a<=0) return;
+  const R=Math.min(200,pw*.27), tx=px+pw/2, ty=py+ph/2, lx=tx+(1-a)*(pw*.7)+Math.sin(u*2.2)*6*a, ly=ty+(1-a)*(ph*.75)+Math.cos(u*1.8)*5*a, mag=1.3;
+  c.save(); c.globalAlpha*=Math.min(1,a*1.6);
+  c.save(); shadowOn(c,40,22,.45); c.beginPath(); c.arc(lx,ly,R+12,0,7); c.fillStyle='#111'; c.fill(); shadowOff(c); c.restore();
+  c.save(); c.beginPath(); c.arc(lx,ly,R,0,7); c.clip(); c.fillStyle='#fff'; c.fillRect(lx-R,ly-R,2*R,2*R);
+  c.translate(lx,ly); c.scale(mag,mag); c.translate(-lx,-ly); coverFocus(c,s._p,px,py,pw,ph,Math.max(zp,.001),s.fx,s.fy); c.restore();
+  c.save(); c.beginPath(); c.arc(lx,ly,R,0,7); c.clip(); const g=c.createLinearGradient(lx-R,ly-R,lx+R*.2,ly+R*.2); g.addColorStop(0,'rgba(255,255,255,.35)'); g.addColorStop(.35,'rgba(255,255,255,.06)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(lx-R,ly-R,2*R,2*R); c.restore();
+  c.lineWidth=14; c.strokeStyle=K; c.beginPath(); c.arc(lx,ly,R+5,0,7); c.stroke(); c.lineWidth=5; c.strokeStyle=O; c.beginPath(); c.arc(lx,ly,R+5,0,7); c.stroke();
+  c.save(); c.translate(lx,ly); c.rotate(Math.PI/4); shadowOn(c,20,10,.4); rr(c,R+8,-13,34,26,6); c.fillStyle='#2A2A2E'; c.fill(); rr(c,R+38,-19,R*.95,38,19); c.fillStyle=O; c.fill(); shadowOff(c); c.fillStyle='rgba(255,255,255,.25)'; rr(c,R+46,-14,R*.8,9,4); c.fill(); c.restore();
+  c.restore(); }
+/* destaque do valor na placa (um estilo por dia) */
+function valueAccent(c,x,y,w,u){ const ac=D.accent, p=seg(u,2.05,2.75); if(p<=0) return; const col=P.plateAccent, out=1-seg(u,4.0,4.4); if(out<=0) return;
+  c.save(); c.globalAlpha*=out;
+  if(ac==='ellipse'){ c.strokeStyle=col; c.lineWidth=5; c.lineCap='round'; c.beginPath(); const e=eo(p); for(let q=0;q<=e;q+=.01){ const an=-2.6+q*Math.PI*2.15, ex=x+w/2+Math.cos(an)*(w/2+34)*(1+.03*Math.sin(q*9)), ey=y-2+Math.sin(an)*54; if(q===0) c.moveTo(ex,ey); else c.lineTo(ex,ey); } c.stroke(); }
+  else if(ac==='brackets'){ const e=back(p); brackets(c,x-24,y-52,w+48,104,30*e,col,5,Math.min(1,e)); }
+  else if(ac==='hash'){ [[x+w-14,y-60,.2],[x+w+24,y-46,-.15]].forEach(([hx,hy,r],k)=>{ const e=back(seg(u,2.05+k*.12,2.5+k*.12)); if(e<=0) return; c.save(); c.translate(hx,hy); c.rotate(r); c.scale(e,e); txt(c,'#',0,0,fBlack(36),col,'center'); c.restore(); }); }
+  else if(ac==='spark'){ sparkle(c,x+w+34,y-34,22*back(p),1,col); sparkle(c,x+w+70,y+6,13*back(seg(u,2.2,2.8)),1,col); }
+  c.restore(); }
 /* aluno */
 function sceneStudent(c,i,u,run){ const s=S[i];
   const k=eo(seg(u,0,.6)), tilt=(1-k)*.06*(i%2?1:-1), x=120,y=360,w=840,h=800;
-  c.save(); c.translate(540,y+h/2+(1-k)*140); c.rotate(tilt); c.translate(-540,-(y+h/2)); c.globalAlpha*=seg(u,0,.25);
+  c.save(); cardIn(c,u,i,y+h/2,k,tilt); c.globalAlpha*=seg(u,0,.25);
   floatCard(c,x,y,w,h,36,P.card,70*eo(seg(u,.3,.8)));
   const open=i===0?'O destaque do dia,':(D.open[(i-1)%D.open.length]||'Mais um,');
   reveal(c,open,x+70,y+78,fSerif(42),P.cardSub,u,.25,{mode:'ghost',align:'left'});
@@ -315,18 +341,19 @@ function sceneStudent(c,i,u,run){ const s=S[i];
   if(s._p){ coverFocus(c,s._p,px,py,pw,ph,zp,s.fx,s.fy); if(fin<1&&s._pt){ c.globalAlpha=1-eo(fin); cover(c,s._pt,px-20,py-20,pw+40,ph+40); c.globalAlpha=1; } } else txt(c,'PRINT DO ALUNO',px+pw/2,py+ph/2,fBold(36),'#888','center',4);
   const sh=seg(u,2.2,2.9); if(sh>0&&sh<1){ c.globalCompositeOperation='lighter'; c.translate(px-300+sh*(pw+600),py+ph/2); c.rotate(-.35); const g=c.createLinearGradient(-110,0,110,0); g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.5,'rgba(255,255,255,.25)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(-110,-ph,220,ph*2); }
   c.restore();
-  if(zp>.02){ const bw=pw*.62, bh=ph*.3; selectBox(c,px+pw/2-bw/2,py+ph/2-bh/2,bw,bh,zp,O); }
+  if(s._p) magnifier(c,s,px,py,pw,ph,zp,u);
   brackets(c,px-18,py-18,pw+36,ph+36,40,P.cardInk,3,eo(seg(u,.6,1.0)));
   c.restore();
   /* foto do aluno flutuando, ligada ao nome por uma linha curva */
   const ka=back(seg(u,.5,1.1)); if(ka>0){ const fx=860, fy=y+120; c.save(); c.globalAlpha*=seg(u,.5,.8); c.strokeStyle=P.cardSub; c.lineWidth=2; c.setLineDash([4,6]); c.beginPath(); c.moveTo(x+w-310,y+150); c.quadraticCurveTo(fx-120,fy-90,fx-70,fy-30); c.stroke(); c.setLineDash([]); c.restore();
     c.save(); c.translate(fx,fy); c.scale(ka,ka); photoFrame(c,s._a,0,0,140,160,.08*(i%2?-1:1)); c.restore(); }
-  chevron(c,52,300,74,0,k); chevron(c,1028,1196,74,Math.PI,k);
   const kp=eo(seg(u,.6,1.1)); c.save(); c.translate(0,(1-kp)*80); c.globalAlpha*=kp;
   slab(c,90,1210,900,210);
   txt(c,'RESULTADO DO DIA',140,1262,fBold(24),P.plateSub,'left',6);
   const pop=1+.12*Math.sin(Math.PI*seg(u,2.0,2.35)), vf=fBlack(fitF(c,'+'+brl(s.value),500,fBlack,86));
-  c.save(); c.translate(140,1340); c.scale(pop,pop); txt(c,'+R$',0,0,vf,P.plateAccent,'left'); txt(c,brl(s.value).slice(3),tw(c,'+R$ ',vf),0,vf,P.plateText,'left'); c.restore();
+  const vw=tw(c,'+R$ '+brl(s.value).slice(3),vf), ga=D.accent==='glow'?Math.sin(Math.PI*seg(u,2.0,3.2)):0;
+  c.save(); c.translate(140,1340); c.scale(pop,pop); if(ga>0){ c.shadowColor=P.plateAccent; c.shadowBlur=40*ga*Q; } txt(c,'+R$',0,0,vf,P.plateAccent,'left'); txt(c,brl(s.value).slice(3),tw(c,'+R$ ',vf),0,vf,P.plateText,'left'); c.restore();
+  valueAccent(c,140,1340,vw,u);
   const rv=brl(run(u)); txt(c,'TURMA HOJE',940,1275,fBold(22),P.plateSub,'right',5); txt(c,rv,940,1325,fBlack(fitF(c,rv,330,fBlack,40)),P.plateText,'right'); txt(c,pad2(i+1)+' / '+pad2(S.length),940,1381,fBold(22),P.plateAccent,'right',4);
   slider(c,140,780,1384,(i+eo(seg(u,.8,2)))/S.length,P.plateAccent,P.plateSub);
   c.restore();
@@ -424,7 +451,7 @@ function sceneStart(k){ let t=0; for(let i=0;i<k;i++) t+=SCENES[i].dur; return t
 function renderTo(c,sc,u){ c.setTransform(Q,0,0,Q,0,0); c.clearRect(0,0,W,H); c.globalAlpha=1; sc.render(c,u); }
 function draw(t){
   useDay(curDay); ctx.setTransform(Q,0,0,Q,0,0); ctx.globalAlpha=1;
-  paper(ctx,t); cornerDecor(ctx,t); topMark(ctx);
+  paper(ctx,t); topMark(ctx);
   if(!SCENES.length){ txt(ctx,MODE==='week'?'Sem resultados na semana':'Marque quem operou hoje',540,960,fSerif(54),P.grey,'center'); grain(ctx,t); return guides(); }
   let k=0, st=0; while(k<SCENES.length-1&&t>=st+SCENES[k].dur){ st+=SCENES[k].dur; k++; } const sc=SCENES[k], local=Math.min(t-st,sc.dur);
   if(k>0&&local<TR){ const pv=SCENES[k-1]; renderTo(sA,pv,pv.dur); renderTo(sB,sc,local); ctx.setTransform(Q,0,0,Q,0,0); transition(local/TR); }
