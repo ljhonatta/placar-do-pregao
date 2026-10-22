@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='3.4.1';
+const APP_VERSION='3.5.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -66,7 +66,7 @@ let AC=null, ASRC=null;
 const sfxOn=()=>!!($('sfx')&&$('sfx').checked);
 function stopSound(){ try{ if(ASRC) ASRC.stop(); }catch(e){} ASRC=null; }
 function runTimeline(startAt=0,sound=false){ const id=++loopId, D=dur(); let t0=null; stopSound();
-  if(sound&&AC&&sfxOn()&&(typeof SFX!=='undefined')){ const tStart=performance.now(); SFX.render(cueList(),D).then(buf=>{ if(!buf||id!==loopId) return; const off=startAt+(performance.now()-tStart)/1000; if(off>=D) return; ASRC=AC.createBufferSource(); ASRC.buffer=buf; ASRC.connect(AC.destination); ASRC.start(0,off); }).catch(()=>{}); }
+  if(sound&&AC&&sfxOn()&&(typeof SFX!=='undefined')){ const tStart=performance.now(); SFX.render(cueList(),D,curDay).then(buf=>{ if(!buf||id!==loopId) return; const off=startAt+(performance.now()-tStart)/1000; if(off>=D) return; ASRC=AC.createBufferSource(); ASRC.buffer=buf; ASRC.connect(AC.destination); ASRC.start(0,off); }).catch(()=>{}); }
   (function f(now){ if(id!==loopId) return; if(t0===null) t0=now-startAt*1000; const t=(now-t0)/1000; draw(Math.min(t,D)); $('prog').style.width=(D?Math.min(100,t/D*100):0)+'%'; if(t<D) requestAnimationFrame(f); })(performance.now()); }
 let prevReq=0;
 async function preview(focusId,sound=false){ if(busy) return; const req=++prevReq; await prepare(); if(req!==prevReq) return;
@@ -81,7 +81,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function aacOK(){ if(!window.AudioEncoder||!window.AudioData) return false; try{ return !!(await AudioEncoder.isConfigSupported({codec:'mp4a.40.2',sampleRate:48000,numberOfChannels:2,bitrate:160000})).supported; }catch(e){ return false; } }
 function realtimeAudioMime(){ if(!window.MediaRecorder||!cv.captureStream||!MediaRecorder.isTypeSupported) return ''; return ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m))||''; }
 async function audioTrack(D){ if(!sfxOn()||!(typeof SFX!=='undefined')||!window.AudioEncoder||!window.AudioData) return null;
-  for(const [codec,mux] of [['mp4a.40.2','aac']]){ const cfg={codec,sampleRate:48000,numberOfChannels:2,bitrate:160000}; try{ const r=await AudioEncoder.isConfigSupported(cfg); if(r.supported){ const buf=await SFX.render(cueList(),D); return buf?{cfg,mux,buf}:null; } }catch(e){} }
+  for(const [codec,mux] of [['mp4a.40.2','aac']]){ const cfg={codec,sampleRate:48000,numberOfChannels:2,bitrate:160000}; try{ const r=await AudioEncoder.isConfigSupported(cfg); if(r.supported){ const buf=await SFX.render(cueList(),D,curDay); return buf?{cfg,mux,buf}:null; } }catch(e){} }
   return null; }
 async function encodeMP4(D,onProg,withAudio=true){
   const cands=[['avc1.640028','avc'],['avc1.4d0028','avc'],['avc1.42e028','avc'],['avc1.640033','avc'],['vp09.00.40.08','vp9']];
@@ -107,13 +107,13 @@ async function encodeMP4(D,onProg,withAudio=true){
 }
 async function recordRealtime(D,onProg){
   const stream=cv.captureStream(FPS); let rsrc=null; lastAudio=false;
-  if(sfxOn()&&(typeof SFX!=='undefined')){ try{ const buf=await SFX.render(cueList(),D); AC=AC||new (window.AudioContext||window.webkitAudioContext)(); await AC.resume(); const dest=AC.createMediaStreamDestination(); rsrc=AC.createBufferSource(); rsrc.buffer=buf; rsrc.connect(dest); stream.addTrack(dest.stream.getAudioTracks()[0]); lastAudio=true; }catch(e){ rsrc=null; } }
+  if(sfxOn()&&(typeof SFX!=='undefined')){ try{ const buf=await SFX.render(cueList(),D,curDay); AC=AC||new (window.AudioContext||window.webkitAudioContext)(); await AC.resume(); const dest=AC.createMediaStreamDestination(); rsrc=AC.createBufferSource(); rsrc.buffer=buf; rsrc.connect(dest); stream.addTrack(dest.stream.getAudioTracks()[0]); lastAudio=true; }catch(e){ rsrc=null; } }
   const mimes=rsrc?['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm']:['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'], mime=mimes.find(m=>MediaRecorder.isTypeSupported?.(m))||'';
   const rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{videoBitsPerSecond:10e6}); const ch=[]; rec.ondataavailable=e=>{if(e.data?.size)ch.push(e.data)}; const stop=new Promise(r=>rec.onstop=r);
   draw(0); rec.start(250); if(rsrc) try{ rsrc.start(); }catch(e){} const t0=performance.now(); await new Promise(res=>{ (function f(now){ const t=(now-t0)/1000; draw(Math.min(t,D)); onProg(t/D); if(t<D+.3) requestAnimationFrame(f); else res(); })(t0); });
   rec.stop(); await stop; return {blob:new Blob(ch,{type:mime||'video/webm'}),ext:(mime.includes('mp4')?'mp4':'webm')};
 }
-let lastVideo=null, lastAudio=false;
+let lastVideo=null, lastAudio=false, audioWhy='';
 const LOCK=['rec','play','add','clearDay','prevWeek','nextWeek'];
 async function record(){
   if(busy) return; $('ready').hidden=true;
@@ -126,13 +126,14 @@ async function record(){
   try{
     let blob=null, ext='mp4';
     const fast=window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer, wantSound=sfxOn()&&(typeof SFX!=='undefined'), aac=wantSound&&await aacOK();
+    audioWhy=!sfxOn()?'efeitos desligados':'AAC '+(aac?'sim':'não')+' · gravador '+(realtimeAudioMime()||'não')+' · ctx '+(AC?AC.state:'nenhum');
     // com som: MP4 rápido quando o navegador grava AAC; senão grava em tempo real (o próprio navegador junta vídeo + som)
     if(fast&&(!wantSound||aac)){ try{ blob=await encodeMP4(D,prog,wantSound); }catch(e){ blob=null; } }
     if(!blob&&wantSound&&realtimeAudioMime()){ status('Gravando com som em tempo real… leva o tempo do vídeo, deixe esta tela aberta.'); try{ const r=await recordRealtime(D,prog); if(r.blob.size>1000){ blob=r.blob; ext=r.ext; } }catch(e){ blob=null; } }
     if(!blob&&fast){ try{ blob=await encodeMP4(D,prog,false); }catch(e){ blob=null; } }
     if(!blob){ if(!window.MediaRecorder||!cv.captureStream) throw new Error('none'); status('Gravando em tempo real… deixe esta tela aberta.'); const r=await recordRealtime(D,prog); blob=r.blob; ext=r.ext; }
     const name=`resultado-${MODE==='week'?'semana':THEMES[curDay].label.toLowerCase().replace('ç','c')}-${days[curDay].date.replace(/\//g,'-')}.${ext}`;
-    lastVideo={blob,name}; $('readyName').textContent='Vídeo pronto: '+name+' ('+(blob.size/1048576).toFixed(1)+' MB · '+(lastAudio?'com efeitos sonoros':'sem som')+')';
+    lastVideo={blob,name}; $('readyName').textContent='Vídeo pronto: '+name+' ('+(blob.size/1048576).toFixed(1)+' MB · '+(lastAudio?'com efeitos sonoros':'sem som — '+audioWhy)+')';
     const file=new File([blob],name,{type:blob.type}); $('share').hidden=!(navigator.canShare&&navigator.canShare({files:[file]}));
     $('ready').hidden=false; status(lastAudio||!sfxOn()?'Vídeo pronto. Toque em baixar.':'Vídeo pronto, mas este navegador não deixou gravar o som. Tente pelo Chrome atualizado.',!lastAudio&&sfxOn()); $('ready').scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(e){ status('Este navegador não conseguiu gerar o vídeo. Use o Chrome ou o Safari atualizado.',true); }
