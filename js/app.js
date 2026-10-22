@@ -1,6 +1,7 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='3.3.0';
+const APP_VERSION='3.4.1';
+try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
 const DEF_ROSTER=[
@@ -77,8 +78,10 @@ async function preview(focusId,sound=false){ if(busy) return; const req=++prevRe
 
 /* ---------- exportação ---------- */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function aacOK(){ if(!window.AudioEncoder||!window.AudioData) return false; try{ return !!(await AudioEncoder.isConfigSupported({codec:'mp4a.40.2',sampleRate:48000,numberOfChannels:2,bitrate:160000})).supported; }catch(e){ return false; } }
+function realtimeAudioMime(){ if(!window.MediaRecorder||!cv.captureStream||!MediaRecorder.isTypeSupported) return ''; return ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m))||''; }
 async function audioTrack(D){ if(!sfxOn()||!(typeof SFX!=='undefined')||!window.AudioEncoder||!window.AudioData) return null;
-  for(const [codec,mux] of [['mp4a.40.2','aac'],['opus','opus']]){ const cfg={codec,sampleRate:48000,numberOfChannels:2,bitrate:160000}; try{ const r=await AudioEncoder.isConfigSupported(cfg); if(r.supported){ const buf=await SFX.render(cueList(),D); return buf?{cfg,mux,buf}:null; } }catch(e){} }
+  for(const [codec,mux] of [['mp4a.40.2','aac']]){ const cfg={codec,sampleRate:48000,numberOfChannels:2,bitrate:160000}; try{ const r=await AudioEncoder.isConfigSupported(cfg); if(r.supported){ const buf=await SFX.render(cueList(),D); return buf?{cfg,mux,buf}:null; } }catch(e){} }
   return null; }
 async function encodeMP4(D,onProg,withAudio=true){
   const cands=[['avc1.640028','avc'],['avc1.4d0028','avc'],['avc1.42e028','avc'],['avc1.640033','avc'],['vp09.00.40.08','vp9']];
@@ -99,21 +102,22 @@ async function encodeMP4(D,onProg,withAudio=true){
     for(let i=0;i<total;i+=CH){ if(err) throw err; const n=Math.min(CH,total-i), data=new Float32Array(n*2); data.set(L.subarray(i,i+n),0); data.set(Rr.subarray(i,i+n),n);
       const ad=new AudioData({format:'f32-planar',sampleRate:48000,numberOfFrames:n,numberOfChannels:2,timestamp:Math.round(i*1e6/48000),data}); aenc.encode(ad); ad.close(); if(aenc.encodeQueueSize>20) await sleep(2); }
     await aenc.flush(); if(err) throw err; aenc.close(); }
-  muxer.finalize();
+  muxer.finalize(); lastAudio=!!au;
   return new Blob([muxer.target.buffer],{type:'video/mp4'});
 }
 async function recordRealtime(D,onProg){
-  const stream=cv.captureStream(FPS); let rsrc=null;
-  if(sfxOn()&&(typeof SFX!=='undefined')){ try{ const buf=await SFX.render(cueList(),D); AC=AC||new (window.AudioContext||window.webkitAudioContext)(); await AC.resume(); const dest=AC.createMediaStreamDestination(); rsrc=AC.createBufferSource(); rsrc.buffer=buf; rsrc.connect(dest); stream.addTrack(dest.stream.getAudioTracks()[0]); }catch(e){ rsrc=null; } }
+  const stream=cv.captureStream(FPS); let rsrc=null; lastAudio=false;
+  if(sfxOn()&&(typeof SFX!=='undefined')){ try{ const buf=await SFX.render(cueList(),D); AC=AC||new (window.AudioContext||window.webkitAudioContext)(); await AC.resume(); const dest=AC.createMediaStreamDestination(); rsrc=AC.createBufferSource(); rsrc.buffer=buf; rsrc.connect(dest); stream.addTrack(dest.stream.getAudioTracks()[0]); lastAudio=true; }catch(e){ rsrc=null; } }
   const mimes=rsrc?['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm']:['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'], mime=mimes.find(m=>MediaRecorder.isTypeSupported?.(m))||'';
   const rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{videoBitsPerSecond:10e6}); const ch=[]; rec.ondataavailable=e=>{if(e.data?.size)ch.push(e.data)}; const stop=new Promise(r=>rec.onstop=r);
   draw(0); rec.start(250); if(rsrc) try{ rsrc.start(); }catch(e){} const t0=performance.now(); await new Promise(res=>{ (function f(now){ const t=(now-t0)/1000; draw(Math.min(t,D)); onProg(t/D); if(t<D+.3) requestAnimationFrame(f); else res(); })(t0); });
   rec.stop(); await stop; return {blob:new Blob(ch,{type:mime||'video/webm'}),ext:(mime.includes('mp4')?'mp4':'webm')};
 }
-let lastVideo=null;
+let lastVideo=null, lastAudio=false;
 const LOCK=['rec','play','add','clearDay','prevWeek','nextWeek'];
 async function record(){
   if(busy) return; $('ready').hidden=true;
+  if(sfxOn()){ try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); AC.resume(); }catch(e){} } // libera o áudio no toque (iPhone exige)
   await prepare();
   if(!SCENES.length){ status(MODE==='week'?'Ainda não há resultados na semana.':'Marque pelo menos um aluno.',true); return; }
   if(MODE==='day'){ const miss=S.filter(s=>!s.print).map(s=>s.name); if(miss.length){ status('Falta o print de: '+miss.join(', ')+'.',true); return; } }
@@ -121,12 +125,16 @@ async function record(){
   const D=dur(), prog=p=>{ $('prog').style.width=Math.round(p*100)+'%'; status('Gerando vídeo… '+Math.round(p*100)+'% · deixe esta tela aberta'); };
   try{
     let blob=null, ext='mp4';
-    if(window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer){ try{ blob=await encodeMP4(D,prog); }catch(e){ try{ blob=await encodeMP4(D,prog,false); }catch(e2){ blob=null; } } }
+    const fast=window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer, wantSound=sfxOn()&&(typeof SFX!=='undefined'), aac=wantSound&&await aacOK();
+    // com som: MP4 rápido quando o navegador grava AAC; senão grava em tempo real (o próprio navegador junta vídeo + som)
+    if(fast&&(!wantSound||aac)){ try{ blob=await encodeMP4(D,prog,wantSound); }catch(e){ blob=null; } }
+    if(!blob&&wantSound&&realtimeAudioMime()){ status('Gravando com som em tempo real… leva o tempo do vídeo, deixe esta tela aberta.'); try{ const r=await recordRealtime(D,prog); if(r.blob.size>1000){ blob=r.blob; ext=r.ext; } }catch(e){ blob=null; } }
+    if(!blob&&fast){ try{ blob=await encodeMP4(D,prog,false); }catch(e){ blob=null; } }
     if(!blob){ if(!window.MediaRecorder||!cv.captureStream) throw new Error('none'); status('Gravando em tempo real… deixe esta tela aberta.'); const r=await recordRealtime(D,prog); blob=r.blob; ext=r.ext; }
     const name=`resultado-${MODE==='week'?'semana':THEMES[curDay].label.toLowerCase().replace('ç','c')}-${days[curDay].date.replace(/\//g,'-')}.${ext}`;
-    lastVideo={blob,name}; $('readyName').textContent='Vídeo pronto: '+name+' ('+(blob.size/1048576).toFixed(1)+' MB)';
+    lastVideo={blob,name}; $('readyName').textContent='Vídeo pronto: '+name+' ('+(blob.size/1048576).toFixed(1)+' MB · '+(lastAudio?'com efeitos sonoros':'sem som')+')';
     const file=new File([blob],name,{type:blob.type}); $('share').hidden=!(navigator.canShare&&navigator.canShare({files:[file]}));
-    $('ready').hidden=false; status('Vídeo pronto. Toque em baixar.'); $('ready').scrollIntoView({block:'nearest',behavior:'smooth'});
+    $('ready').hidden=false; status(lastAudio||!sfxOn()?'Vídeo pronto. Toque em baixar.':'Vídeo pronto, mas este navegador não deixou gravar o som. Tente pelo Chrome atualizado.',!lastAudio&&sfxOn()); $('ready').scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(e){ status('Este navegador não conseguiu gerar o vídeo. Use o Chrome ou o Safari atualizado.',true); }
   finally{ busy=false; exporting=false; setRes(.5); draw(dur()); LOCK.forEach(b=>$(b).disabled=false); document.querySelectorAll('.tabs button').forEach(b=>b.disabled=false); $('prog').style.width='100%'; }
 }

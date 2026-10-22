@@ -199,7 +199,7 @@ function paper(c,t){
   c.save(); c.globalAlpha=.08; c.strokeStyle=P.ink; c.lineWidth=1.5; c.beginPath(); c.arc(1040,560,520,Math.PI*.55,Math.PI*1.25); c.stroke(); c.beginPath(); c.arc(40,1380,460,-Math.PI*.4,Math.PI*.3); c.stroke(); c.restore();
 }
 function grain(c,t){ if(!GRAIN) return; c.save(); c.globalAlpha=P.dark?.05:.035; c.globalCompositeOperation=P.dark?'screen':'multiply'; const ox=-Math.floor(RND(Math.floor(t*12))*256), oy=-Math.floor(RND(Math.floor(t*12)+5)*256); for(let x=ox;x<W;x+=256) for(let y=oy;y<H;y+=256) c.drawImage(GRAIN,x,y); c.restore(); }
-function topMark(c){ logo(c,540,300,150,'auto',.9); }
+function topMark(c){ logo(c,540,300,200,'auto',.95); }
 
 /* ---------- cartão flutuante (com canto dobrando) e base 3D ---------- */
 function floatCard(c,x,y,w,h,r=36,fill=P.card,curl=0){ c.save(); shadowOn(c,70,34,.30); rr(c,x,y,w,h,r); c.fillStyle=fill; c.fill(); shadowOff(c);
@@ -405,8 +405,8 @@ function cueList(){ useDay(curDay); const out=[]; let st=0;
 
 /* destaque do dia */
 function sceneHL(c,t){ const s=S[0], CY=790;
-  reveal(c,'O destaque',540,402,fSerif(58),P.ink2,t,.1,{mode:'ghost'});
-  reveal(c,'DO DIA',540,476,fBlack(80),P.ink,t,.35,{mode:'rise',big:true});
+  reveal(c,'O destaque',540,428,fSerif(58),P.ink2,t,.1,{mode:'ghost'});
+  reveal(c,'DO DIA',540,498,fBlack(80),P.ink,t,.35,{mode:'rise',big:true});
   orbit(c,S.slice(1).map(s=>s._a),540,CY,330,t,eo(seg(t,.9,1.5)),.5);
   const k=back(seg(t,.3,1.0)); if(k>0){ c.save(); c.translate(540,CY); c.scale(k,k); shadowOn(c,60,30,.35); c.fillStyle=P.solid; c.beginPath(); c.arc(0,0,192,0,7); c.fill(); shadowOff(c);
     const bk=seg(t,.3,.9); if(s._a){ c.save(); c.beginPath(); c.arc(0,0,180,0,7); c.clip(); if(bk<1&&s._at){ c.globalAlpha*=1-bk; cover(c,s._at,-198,-198,396,396); c.globalAlpha=bk; } cover(c,s._a,-198,-198,396,396); c.restore(); } else avatar(c,null,0,0,180); c.restore(); dashRing(c,540,CY,224*k,t,O,5,.3); }
@@ -446,7 +446,7 @@ function valueAccent(c,x,y,w,u){ const ac=D.accent, p=seg(u,2.05,2.75); if(p<=0)
   c.restore(); }
 /* aluno */
 function sceneStudent(c,i,u,run){ const s=S[i];
-  const k=eo(seg(u,0,.6)), tilt=(1-k)*.06*(i%2?1:-1), x=120,y=360,w=840,h=800;
+  const k=eo(seg(u,0,.6)), tilt=(1-k)*.06*(i%2?1:-1), x=120,y=382,w=840,h=790;
   c.save(); cardIn(c,u,i,y+h/2,k,tilt); c.globalAlpha*=seg(u,0,.25);
   floatCard(c,x,y,w,h,36,P.card,70*eo(seg(u,.3,.8)));
   const open=i===0?'O destaque do dia,':(D.open[(i-1)%D.open.length]||'Mais um,');
