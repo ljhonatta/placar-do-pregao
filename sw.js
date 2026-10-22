@@ -1,9 +1,9 @@
 /* Placar do Pregão — service worker.
    Funciona offline e se atualiza: o código do app é buscado na rede primeiro (cai no cache sem internet);
    fontes, fotos e ícones vêm do cache. Ao publicar uma versão nova, mude VERSION. */
-const VERSION='placar-v1.0.0';
+const VERSION='placar-v2.0.0';
 const CORE=['./','index.html','css/app.css','js/store.js','js/engine.js','js/app.js','vendor/mp4-muxer.js','manifest.webmanifest',
-  'assets/logo.png','assets/fonts/anton-400.woff2','assets/fonts/barlow-condensed-500.woff2','assets/fonts/barlow-condensed-600.woff2','assets/fonts/barlow-condensed-700.woff2',
+  'assets/logo.png','assets/fonts/anton-400.woff2','assets/fonts/barlow-condensed-500.woff2','assets/fonts/barlow-condensed-600.woff2','assets/fonts/barlow-condensed-700.woff2','assets/fonts/jetbrains-mono-500.woff2','assets/fonts/jetbrains-mono-800.woff2','assets/fonts/teko-500.woff2','assets/fonts/teko-700.woff2','assets/fonts/playfair-900.woff2','assets/fonts/playfair-700-italic.woff2','assets/fonts/montserrat-500.woff2','assets/fonts/montserrat-700.woff2','assets/fonts/orbitron-700.woff2','assets/fonts/orbitron-900.woff2','assets/fonts/bebas-neue-400.woff2','assets/fonts/cinzel-700.woff2','assets/fonts/cinzel-900.woff2',
   'icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png','icons/favicon-64.png',
   ...Array.from({length:15},(_,k)=>'assets/avatars/s'+k+'.jpg')];
 

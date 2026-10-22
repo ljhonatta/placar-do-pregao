@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='1.0.0';
+const APP_VERSION='2.0.0';
 
 /* ---------- turma padrão ---------- */
 const DEF_ROSTER=[
