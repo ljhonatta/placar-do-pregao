@@ -400,7 +400,7 @@ const COVER_CUES={
 const TRANS_SFX={focus:'whoosh',bars:'swish',flip:'swish',square:'whoosh',shatter:'shatter',zoom:'boom'};
 const ACCENT_SFX={spark:'shimmer',ellipse:'scribble',brackets:'pop',hash:'pop',glow:'shimmer'};
 function cueList(){ useDay(curDay); const out=[]; let st=0;
-  SCENES.forEach((sc,k)=>{ if(k>0) out.push({t:st,k:TRANS_SFX[D.trans]||'whoosh'}); (sc.cues||[]).forEach(([u,kk])=>{ if(u<sc.dur) out.push({t:st+u,k:kk}); }); st+=sc.dur; });
+  SCENES.forEach((sc,k)=>{ if(k>0) out.push({t:st,k:'trans'}); (sc.cues||[]).forEach(([u,kk])=>{ if(u<sc.dur) out.push({t:st+u,k:kk}); }); st+=sc.dur; });
   return out; }
 
 /* destaque do dia */

@@ -109,3 +109,4 @@ input[type=text]{font-family:var(--body);font-size:18px;background:var(--ink);co
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0));transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:10px 12px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.6);max-width:calc(100% - 32px);font-weight:600}
 @media (max-width:420px){.row{grid-template-columns:1fr}.tabs button{font-size:14px}.brand span{display:none}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+#audioRow:not([hidden]){display:flex;flex-direction:column;gap:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12)}

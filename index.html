@@ -37,14 +37,21 @@
       <strong id="readyName">Vídeo pronto</strong>
       <div class="ctrl">
         <button type="button" class="primary" id="dl">Baixar vídeo</button>
-        <button type="button" id="share" hidden>Salvar no celular / compartilhar</button>
+        <button type="button" id="share" hidden>Salvar vídeo no celular</button>
+      </div>
+      <div id="audioRow" hidden>
+        <strong id="readyAudio">Áudio dos efeitos</strong>
+        <div class="ctrl">
+          <button type="button" class="primary" id="dlA">Baixar áudio (.wav)</button>
+          <button type="button" id="shareA" hidden>Salvar áudio no celular</button>
+        </div>
       </div>
     </div>
     <label class="toggle" hidden><input type="checkbox" id="tickers" checked> Faixas de texto passando em cima e embaixo</label>
-    <label class="toggle"><input type="checkbox" id="sfx" checked> Efeitos sonoros no vídeo (whoosh, cliques, moeda)</label>
+    <label class="toggle"><input type="checkbox" id="sfx" checked> Gerar também o áudio dos efeitos sonoros (arquivo separado para o CapCut)</label>
     <label class="toggle"><input type="checkbox" id="guides"> Mostrar áreas que o Reels cobre (só na prévia)</label>
     <p class="status" id="status" role="status"></p>
-    <p class="note">MP4 1080×1920, 30 quadros, sem áudio, pronto pra trilha no CapCut. Estilo editorial: cada dia tem objeto de capa, frases e transição próprios.</p>
+    <p class="note">MP4 1080×1920, 30 quadros, sem áudio (roda liso). Os efeitos sonoros vêm num arquivo .wav separado, já sincronizado: no CapCut, coloque o áudio no início do vídeo. Estilo editorial: cada dia tem objeto de capa, frases e transição próprios.</p>
   </section>
 
   <section class="col-edit" aria-label="Painel">

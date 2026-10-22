@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='3.5.1';
+const APP_VERSION='3.6.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -113,16 +113,16 @@ async function encodeMP4(D,onProg,withAudio=true){
   muxer.finalize(); lastAudio=!!au;
   return new Blob([muxer.target.buffer],{type:'video/mp4'});
 }
-async function recordRealtime(D,onProg){
+async function recordRealtime(D,onProg,withAudio=false){
   const stream=cv.captureStream(FPS); let rsrc=null; lastAudio=false;
-  if(sfxOn()&&(typeof SFX!=='undefined')){ try{ const buf=await SFX.render(cueList(),D,curDay); AC=AC||new (window.AudioContext||window.webkitAudioContext)(); await AC.resume(); const dest=AC.createMediaStreamDestination(); rsrc=AC.createBufferSource(); rsrc.buffer=buf; rsrc.connect(dest); stream.addTrack(dest.stream.getAudioTracks()[0]); lastAudio=true; }catch(e){ rsrc=null; } }
+  if(withAudio&&sfxOn()&&(typeof SFX!=='undefined')){ try{ const buf=await SFX.render(cueList(),D,curDay); AC=AC||new (window.AudioContext||window.webkitAudioContext)(); await AC.resume(); const dest=AC.createMediaStreamDestination(); rsrc=AC.createBufferSource(); rsrc.buffer=buf; rsrc.connect(dest); stream.addTrack(dest.stream.getAudioTracks()[0]); lastAudio=true; }catch(e){ rsrc=null; } }
   const mimes=rsrc?['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm']:['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'], mime=mimes.find(m=>MediaRecorder.isTypeSupported?.(m))||'';
   const rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:10e6}:{videoBitsPerSecond:10e6}); const ch=[]; rec.ondataavailable=e=>{if(e.data?.size)ch.push(e.data)}; const stop=new Promise(r=>rec.onstop=r);
   if(rsrc&&AC.state!=='running'){ try{ await AC.resume(); }catch(e){} }
   draw(0); rec.start(250); if(rsrc) try{ rsrc.start(); }catch(e){} const t0=performance.now(); await new Promise(res=>{ (function f(now){ const t=(now-t0)/1000; draw(Math.min(t,D)); onProg(t/D); if(t<D+.3) requestAnimationFrame(f); else res(); })(t0); });
   rec.stop(); await stop; return {blob:new Blob(ch,{type:mime||'video/webm'}),ext:(mime.includes('mp4')?'mp4':'webm')};
 }
-let lastVideo=null, lastAudio=false, audioWhy='';
+let lastVideo=null, lastAudio=false, audioWhy='', lastWav=null;
 const LOCK=['rec','play','add','clearDay','prevWeek','nextWeek'];
 async function record(){
   if(busy) return; $('ready').hidden=true;
@@ -134,26 +134,23 @@ async function record(){
   const D=dur(), prog=p=>{ $('prog').style.width=Math.round(p*100)+'%'; status('Gerando vídeo… '+Math.round(p*100)+'% · deixe esta tela aberta'); };
   try{
     let blob=null, ext='mp4';
-    const fast=window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer, wantSound=sfxOn()&&(typeof SFX!=='undefined'), aac=wantSound&&await aacOK();
-    audioWhy=!sfxOn()?'efeitos desligados':'AAC '+(aac?'sim':'não')+' · gravador '+(realtimeAudioMime()||'não')+' · ctx '+(AC?AC.state:'nenhum');
-    // com som: MP4 rápido quando o navegador grava AAC; senão grava em tempo real (o próprio navegador junta vídeo + som)
-    let v1='—', v2='—'; lastAudio=false;
-    if(fast&&(!wantSound||aac)){ try{ blob=await encodeMP4(D,prog,wantSound); }catch(e){ blob=null; } }
-    if(blob&&wantSound){ status('Conferindo o som do vídeo…'); v1=lastAudio?await verifyAudio(blob):'sem trilha'; if(v1!=='ok'){ lastAudio=false; } }
-    if(wantSound&&!lastAudio&&realtimeAudioMime()){ status('Gravando com som em tempo real… leva o tempo do vídeo, deixe esta tela aberta.');
-      try{ const r=await recordRealtime(D,prog); if(r.blob.size>1000){ v2=lastAudio?await verifyAudio(r.blob):'sem trilha'; if(v2==='ok'||!blob||v1!=='ok'){ blob=r.blob; ext=r.ext; lastAudio=v2==='ok'||(lastAudio&&v2==='erro'); } } }catch(e){} }
-    audioWhy+=' · conferência: rápido '+v1+', gravador '+v2;
-    if(!blob&&fast){ try{ blob=await encodeMP4(D,prog,false); }catch(e){ blob=null; } }
+    const fast=window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer; lastAudio=false; lastWav=null;
+    if(fast){ try{ blob=await encodeMP4(D,prog,false); }catch(e){ blob=null; } }
     if(!blob){ if(!window.MediaRecorder||!cv.captureStream) throw new Error('none'); status('Gravando em tempo real… deixe esta tela aberta.'); const r=await recordRealtime(D,prog); blob=r.blob; ext=r.ext; }
     const name=`resultado-${MODE==='week'?'semana':THEMES[curDay].label.toLowerCase().replace('ç','c')}-${days[curDay].date.replace(/\//g,'-')}.${ext}`;
-    lastVideo={blob,name}; $('readyName').textContent='Vídeo pronto: '+name+' ('+(blob.size/1048576).toFixed(1)+' MB · '+(lastAudio?'com efeitos sonoros ✓ conferido':'sem som — '+audioWhy)+')';
+    lastVideo={blob,name}; $('readyName').textContent='Vídeo pronto: '+name+' ('+(blob.size/1048576).toFixed(1)+' MB)';
+    if(sfxOn()&&(typeof SFX!=='undefined')){ status('Gerando o áudio dos efeitos…'); try{ const buf=await SFX.render(cueList(),D,curDay); if(buf){ lastWav={blob:SFX.wav(buf),name:name.replace(/\.(mp4|webm)$/,'')+'-efeitos.wav'}; } }catch(e){ lastWav=null; } }
+    $('audioRow').hidden=!lastWav; if(lastWav) $('readyAudio').textContent='Áudio dos efeitos: '+lastWav.name+' ('+(lastWav.blob.size/1048576).toFixed(1)+' MB)';
+    $('shareA').hidden=!(lastWav&&navigator.canShare&&navigator.canShare({files:[new File([lastWav.blob],lastWav.name,{type:'audio/wav'})]}));
     const file=new File([blob],name,{type:blob.type}); $('share').hidden=!(navigator.canShare&&navigator.canShare({files:[file]}));
-    $('ready').hidden=false; status(lastAudio||!sfxOn()?'Vídeo pronto. Toque em baixar.':'Vídeo pronto, mas este navegador não deixou gravar o som. Tente pelo Chrome atualizado.',!lastAudio&&sfxOn()); $('ready').scrollIntoView({block:'nearest',behavior:'smooth'});
+    $('ready').hidden=false; status(lastWav?'Pronto: baixe o vídeo e depois o áudio dos efeitos.':'Vídeo pronto. Toque em baixar.'); $('ready').scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(e){ status('Este navegador não conseguiu gerar o vídeo. Use o Chrome ou o Safari atualizado.',true); }
   finally{ busy=false; exporting=false; setRes(.5); draw(dur()); LOCK.forEach(b=>$(b).disabled=false); document.querySelectorAll('.tabs button').forEach(b=>b.disabled=false); $('prog').style.width='100%'; }
 }
 function downloadBlob(blob,name){ const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000); }
 $('dl').onclick=()=>{ if(lastVideo){ downloadBlob(lastVideo.blob,lastVideo.name); status('Download iniciado: '+lastVideo.name); } };
+$('dlA').onclick=()=>{ if(lastWav){ downloadBlob(lastWav.blob,lastWav.name); status('Download iniciado: '+lastWav.name); } };
+$('shareA').onclick=async()=>{ if(!lastWav) return; try{ await navigator.share({files:[new File([lastWav.blob],lastWav.name,{type:'audio/wav'})],title:'Áudio dos efeitos'}); }catch(e){ if(e&&e.name!=='AbortError') status('Não deu pra compartilhar. Use "Baixar áudio".',true); } };
 $('share').onclick=async()=>{ if(!lastVideo) return; try{ await navigator.share({files:[new File([lastVideo.blob],lastVideo.name,{type:lastVideo.blob.type})],title:'Resultado dos alunos'}); }catch(e){ if(e&&e.name!=='AbortError') status('Não deu pra compartilhar. Use "Baixar vídeo".',true); } };
 
 /* ---------- painel ---------- */
