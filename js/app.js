@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='2.1.0';
+const APP_VERSION='2.2.0';
 
 /* ---------- turma padrão ---------- */
 const DEF_ROSTER=[
@@ -168,6 +168,8 @@ $('nextWeek').onclick=async()=>{ if(weekOffset<0){ weekOffset++; await changeWee
 $('thisWeek').onclick=async()=>{ weekOffset=0; curDay=todayTab(); await changeWeek(); };
 async function changeWeek(){ buildWeek(); await preloadUrls(); renderAll(); preview(); }
 $('play').onclick=()=>preview(); $('rec').onclick=record; $('guides').onchange=()=>{ if(!busy) preview(); };
+try{ if(localStorage.getItem('placar:tickers')==='0') $('tickers').checked=false; }catch(e){}
+$('tickers').onchange=()=>{ try{ localStorage.setItem('placar:tickers',$('tickers').checked?'1':'0'); }catch(e){} if(!busy) preview(); };
 
 /* ---------- virada do dia automática ---------- */
 let lastToday=todayInfo().key;

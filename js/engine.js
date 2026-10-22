@@ -143,7 +143,7 @@ SKINS.qua={ name:'gold',
   pal:{ink:'#0A0A0B',panel:'#17161A',line:'#2E2B30',paper:'#FFFFFF',muted:'#A39C92',accent:'#FF6A13',accent2:'#FFFFFF',on:'#0A0A0B',glow:'#FF6A13'},
   fd:mkF("'Playfair Display', Georgia, serif",900), fi:mkF("'Playfair Display', Georgia, serif",700,'italic '), fb:mkF("Montserrat, 'Helvetica Neue', sans-serif",500), fbb:mkF("Montserrat, 'Helvetica Neue', sans-serif",700),
   fonts:["900 40px 'Playfair Display'","italic 700 40px 'Playfair Display'","500 40px Montserrat","700 40px Montserrat"], face3D:['#E7E7E7','#F29661','#C35210'], side3D:['#642A08','#120904'],
-  avatar:'circle', tick:'◆ EDIÇÃO DE OURO   ◆ TRADER SCHOOL   ◆ MENTORIA WENDELL GUIMARÃES   ', trans:'iris', hl:'DESTAQUE DE OURO', caps:false, tag:'RESULTADO' };
+  avatar:'circle', tick:'◆ QUARTA-FEIRA   ◆ RESULTADO DOS ALUNOS   ◆ TRADER SCHOOL   ◆ MENTORIA WENDELL GUIMARÃES   ', trans:'iris', hl:'DESTAQUE DO DIA', caps:false, tag:'RESULTADO' };
 /* ----- QUINTA · NEON SYNTHWAVE ----- */
 SKINS.qui={ name:'neon',
   pal:{ink:'#0A0A0B',panel:'#17161A',line:'#2E2B30',paper:'#FFFFFF',muted:'#A39C92',accent:'#FF6A13',accent2:'#FFFFFF',on:'#0A0A0B',glow:'#FF6A13'},
@@ -220,7 +220,7 @@ const BG={terminal:bgTerminal,broadcast:bgTrack,gold:bgGold,neon:bgSynth,cinema:
 
 /* ---------- moldura geral, letreiros e cabeçalho ---------- */
 function background(t){ ctx.fillStyle=SK.pal.ink; ctx.fillRect(0,0,W,H); }
-function ticker(t,y,dir){ if(SK.noTicker) return; const P=SK.pal; ctx.save();
+function ticker(t,y,dir){ if(SK.noTicker||($('tickers')&&!$('tickers').checked)) return; const P=SK.pal; ctx.save();
   if(SK.name==='broadcast'){ ctx.fillStyle=P.accent; ctx.fillRect(0,y-30,W,60); ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,y+26,W,4); }
   else if(SK.name==='gold'){ ctx.fillStyle=rgba(P.accent,.08); ctx.fillRect(0,y-30,W,60); ctx.fillStyle=P.accent; ctx.fillRect(0,y-30,W,1.5); ctx.fillRect(0,y+28,W,1.5); }
   else if(SK.name==='neon'){ ctx.fillStyle='rgba(38,20,10,.85)'; ctx.fillRect(0,y-30,W,60); ctx.shadowColor=P.accent2; ctx.shadowBlur=12; ctx.fillStyle=P.accent2; ctx.fillRect(0,y-30,W,2); ctx.fillRect(0,y+28,W,2); ctx.shadowBlur=0; }
@@ -407,7 +407,7 @@ function cardGold(c,s,i,u){ const P=SK.pal, k=enterP(u);
   [[14,14],[FW-14,14],[14,766],[FW-14,766]].forEach(([x,y])=>{ c.save(); c.translate(x,y); c.rotate(Math.PI/4); c.fillStyle=P.accent; c.fillRect(-9,-9,18,18); c.restore(); });
   c.save(); c.beginPath(); c.rect(30,30,FW-60,720); c.clip(); printBody(c,s,30,30,FW-60,720,zoomP(u),u);
   const vg=c.createRadialGradient(FW/2,390,250,FW/2,390,620); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(28,15,7,.55)'); c.fillStyle=vg; c.fillRect(30,30,FW-60,720); c.restore();
-  if(i===0){ c.fillStyle=P.ink; c.fillRect(FW/2-150,4,300,40); txt(c,'◆ DESTAQUE DE OURO ◆',FW/2,24,SK.fbb(22),P.accent,'center',4); }
+  if(i===0){ c.fillStyle=P.ink; c.fillRect(FW/2-150,4,300,40); txt(c,'◆ DESTAQUE DO DIA ◆',FW/2,24,SK.fbb(22),P.accent,'center',4); }
   c.save(); c.globalAlpha=k; c.translate(0,(1-k)*30);
   avatar(c,s._a,74,874,62,P.accent,3,'circle'); c.beginPath(); c.arc(74,874,72,0,7); c.strokeStyle=rgba(P.accent,.5); c.lineWidth=1.5; c.stroke();
   const pw=valueBadge(c,'+'+brl(s.value),FW-6,874,46,popP(u));
