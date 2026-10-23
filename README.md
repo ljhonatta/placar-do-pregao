@@ -27,14 +27,14 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - `sw.js`, `manifest.webmanifest`: app instalável e offline
 - `vendor/mp4-muxer.js`: geração do MP4 (MIT)
 
-## Formato de cada dia (v4)
-| Dia | Card do aluno | Trilha (no áudio .wav) |
-|---|---|---|
-| Segunda | Editorial recorte: foto P&B, print como folha com orelha, caixa de seleção no valor | 100 BPM · piano + pad, 808 leve |
-| Terça | Cinema dark: luz laranja, nome em serifada com colchetes, ícones orbitando | 120 BPM · 808 pesado + braam |
-| Quarta | Celular fly-through: câmera sai da tela, texto com aberração cromática, notificação do resultado | 110 BPM · pad tecnológico + arpejo |
-| Quinta | Caderno do trader: bloco com alfinete, print com fita, valor circulado à mão | 100 BPM · boom bap com vinil e piano |
-| Sexta | Plantão do Pregão: jornal caindo em 3D, carimbo do valor, cotação no rodapé | 120 BPM · phonk com cowbell |
-| Sábado | Semana: pódio em pedestal, ranking, total | 96 BPM · épico com cordas e tímpano |
+## Formato de cada dia (v4.1)
+| Dia | Card do aluno | Final (total da turma) | Transição | Kit de som | Trilha |
+|---|---|---|---|---|---|
+| Segunda | Editorial recorte | Prints na mesa que viram grade + caixa de seleção | Foco/desfoque | softWhoosh, softPop, chime | 100 BPM · piano |
+| Terça | Cinema dark | Avatares orbitando o valor com colchetes | Barras | airSwell, softThump, chime grave | 120 BPM · 808 |
+| Quarta | Celular fly-through | Tela de resumo no celular + notificação | Giro (flip) | silkSwipe, softTick, chime | 110 BPM · arpejo |
+| Quinta | Caderno do trader | Soma escrita no bloco e total circulado | Quadrado | paperSlide, softTick, chime | 100 BPM · boom bap |
+| Sexta | Plantão do Pregão | Nova página de jornal com carimbo do total | Virada de página | pageTurn, softWhoosh, chime | 120 BPM · phonk |
+| Sábado | Semana (pódio, ranking) | Pódio em pedestal, demais em fila, logo em pêndulo | Zoom | softWhoosh, softThump, chime, softRiser | 96 BPM · cordas |
 
-Cada cena dura um número inteiro de compassos da trilha do dia, então os cortes caem no tempo 1. A música abaixa sozinha sob os efeitos principais (moeda, impacto, carimbo).
+Áudio: escolha no painel entre **Música + efeitos**, **Só efeitos** ou **Sem som** (vale para a prévia e para o .wav). Cada cena dura um número inteiro de compassos, então os cortes caem no tempo 1, e a música abaixa sozinha sob os efeitos principais.
