@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='4.0.0';
+const APP_VERSION='4.1.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -64,8 +64,9 @@ async function takeAvatar(r,file){ let c; try{ c=await toCanvas(file,520); }catc
 function status(m,warn){ $('status').textContent=m; $('status').classList.toggle('warn',!!warn); }
 let AC=null, ASRC=null, musicSeed=0;
 try{ musicSeed=+(localStorage.getItem('placar:musicSeed')||0)||0; }catch(e){}
-function musicOpts(){ return {music:!!($('music')&&$('music').checked),vol:$('musicVol')?(+$('musicVol').value)/100:.7,seed:musicSeed,plan:musicPlan()}; }
-const sfxOn=()=>!!($('sfx')&&$('sfx').checked);
+let audioMode='music';
+function musicOpts(){ return {mode:audioMode,music:audioMode==='music',vol:$('musicVol')?(+$('musicVol').value)/100:.7,seed:musicSeed,plan:musicPlan()}; }
+const sfxOn=()=>audioMode!=='none';
 function stopSound(){ try{ if(ASRC) ASRC.stop(); }catch(e){} ASRC=null; }
 function runTimeline(startAt=0,sound=false){ const id=++loopId, D=dur(); let t0=null; stopSound();
   if(sound&&AC&&sfxOn()&&(typeof SFX!=='undefined')){ const tStart=performance.now(); SFX.render(cueList(),D,curDay,musicOpts()).then(buf=>{ if(!buf||id!==loopId) return; const off=startAt+(performance.now()-tStart)/1000; if(off>=D) return; ASRC=AC.createBufferSource(); ASRC.buffer=buf; ASRC.connect(AC.destination); ASRC.start(0,off); }).catch(()=>{}); }
@@ -212,12 +213,14 @@ $('thisWeek').onclick=async()=>{ weekOffset=0; curDay=todayTab(); await changeWe
 async function changeWeek(){ buildWeek(); await preloadUrls(); renderAll(); preview(); }
 $('play').onclick=()=>{ if(sfxOn()){ try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); AC.resume(); }catch(e){} } preview(undefined,true); }; $('rec').onclick=record; $('guides').onchange=()=>{ if(!busy) preview(); };
 try{ if(localStorage.getItem('placar:tickers')==='0') $('tickers').checked=false; }catch(e){}
-try{ if(localStorage.getItem('placar:sfx')==='0') $('sfx').checked=false; }catch(e){}
-try{ const m=localStorage.getItem('placar:music'); if(m==='0') $('music').checked=false; const v=localStorage.getItem('placar:musicVol'); if(v) $('musicVol').value=v; }catch(e){}
-$('music').onchange=()=>{ try{ localStorage.setItem('placar:music',$('music').checked?'1':'0'); }catch(e){} stopSound(); };
+try{ const v=localStorage.getItem('placar:musicVol'); if(v) $('musicVol').value=v; }catch(e){}
+/* áudio: Música + efeitos · Só efeitos · Sem som (salvo no aparelho) */
+function applyAudioMode(m){ audioMode=['music','sfx','none'].includes(m)?m:'music'; document.querySelectorAll('input[name=amode]').forEach(r=>r.checked=r.value===audioMode); $('musicVol').disabled=audioMode!=='music'; $('musicSeed').disabled=audioMode!=='music'; $('musicVolLbl').classList.toggle('off',audioMode!=='music'); }
+document.querySelectorAll('input[name=amode]').forEach(r=>r.onchange=()=>{ if(!r.checked) return; applyAudioMode(r.value); stopSound(); Store.set('audioMode',audioMode).catch(()=>{}); });
+applyAudioMode('music'); Store.get('audioMode').then(m=>{ if(m) applyAudioMode(m); }).catch(()=>{});
 $('musicVol').oninput=()=>{ try{ localStorage.setItem('placar:musicVol',$('musicVol').value); }catch(e){} };
 $('musicSeed').onclick=()=>{ musicSeed=(musicSeed+1)%97; try{ localStorage.setItem('placar:musicSeed',musicSeed); }catch(e){} status('Trilha: variação '+(musicSeed+1)+'. Toque em "Tocar prévia" para ouvir.'); };
-$('sfx').onchange=()=>{ try{ localStorage.setItem('placar:sfx',$('sfx').checked?'1':'0'); }catch(e){} if(!$('sfx').checked) stopSound(); };
+
 $('tickers').onchange=()=>{ try{ localStorage.setItem('placar:tickers',$('tickers').checked?'1':'0'); }catch(e){} if(!busy) preview(); };
 
 /* ---------- virada do dia automática ---------- */

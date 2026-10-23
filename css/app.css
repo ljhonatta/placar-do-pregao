@@ -118,3 +118,10 @@ input[type=text]{font-family:var(--body);font-size:18px;background:var(--ink);co
 .musicRow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .musicRow .vol{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--muted)}
 .musicRow input[type=range]{accent-color:var(--accent);width:160px}
+
+.amode{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 18px;margin:0}
+.amode legend{font-size:14px;color:var(--muted);padding:0 6px}
+.amode label{display:flex;align-items:center;gap:8px;font-size:16px;cursor:pointer}
+.amode input{accent-color:var(--accent);width:18px;height:18px}
+.musicRow .vol.off{opacity:.4}
+button:disabled{opacity:.4;cursor:default}
