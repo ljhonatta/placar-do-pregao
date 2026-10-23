@@ -48,7 +48,12 @@
       </div>
     </div>
     <label class="toggle" hidden><input type="checkbox" id="tickers" checked> Faixas de texto passando em cima e embaixo</label>
-    <label class="toggle"><input type="checkbox" id="sfx" checked> Gerar também o áudio dos efeitos sonoros (arquivo separado para o CapCut)</label>
+    <label class="toggle"><input type="checkbox" id="sfx" checked> Gerar o áudio (.wav) com efeitos sonoros, separado para o CapCut</label>
+    <div class="musicRow">
+      <label class="toggle"><input type="checkbox" id="music" checked> Trilha sonora no áudio (no ritmo dos cortes)</label>
+      <label class="vol">Volume da trilha <input type="range" id="musicVol" min="0" max="100" value="70"></label>
+      <button type="button" id="musicSeed">Outra variação da trilha</button>
+    </div>
     <label class="toggle"><input type="checkbox" id="guides"> Mostrar áreas que o Reels cobre (só na prévia)</label>
     <p class="status" id="status" role="status"></p>
     <div class="caption" id="capBox" hidden>

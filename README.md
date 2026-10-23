@@ -26,3 +26,15 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - `js/store.js`: armazenamento no aparelho
 - `sw.js`, `manifest.webmanifest`: app instalável e offline
 - `vendor/mp4-muxer.js`: geração do MP4 (MIT)
+
+## Formato de cada dia (v4)
+| Dia | Card do aluno | Trilha (no áudio .wav) |
+|---|---|---|
+| Segunda | Editorial recorte: foto P&B, print como folha com orelha, caixa de seleção no valor | 100 BPM · piano + pad, 808 leve |
+| Terça | Cinema dark: luz laranja, nome em serifada com colchetes, ícones orbitando | 120 BPM · 808 pesado + braam |
+| Quarta | Celular fly-through: câmera sai da tela, texto com aberração cromática, notificação do resultado | 110 BPM · pad tecnológico + arpejo |
+| Quinta | Caderno do trader: bloco com alfinete, print com fita, valor circulado à mão | 100 BPM · boom bap com vinil e piano |
+| Sexta | Plantão do Pregão: jornal caindo em 3D, carimbo do valor, cotação no rodapé | 120 BPM · phonk com cowbell |
+| Sábado | Semana: pódio em pedestal, ranking, total | 96 BPM · épico com cordas e tímpano |
+
+Cada cena dura um número inteiro de compassos da trilha do dia, então os cortes caem no tempo 1. A música abaixa sozinha sob os efeitos principais (moeda, impacto, carimbo).
