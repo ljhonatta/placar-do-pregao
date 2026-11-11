@@ -101,7 +101,8 @@ const SFX=(()=>{
     qua:Object.assign({},SOFT,{trans:'silkSwipe', whoosh:'silkSwipe', pop:'softTick', click:'softTick'}),
     qui:Object.assign({},SOFT,{trans:'paperSlide', whoosh:'paperSlide', swish:'paperSlide', pop:'softTick', scribble:'paperSlide'}),
     sex:Object.assign({},SOFT,{trans:'pageTurn', whoosh:'softWhoosh', swish:'pageTurn', stamp:'softThump'}),
-    sab:Object.assign({},SOFT,{trans:'softWhoosh', impact:'softThump', riser:'softRiser', cash:'chime'})
+    sab:Object.assign({},SOFT,{trans:'softWhoosh', impact:'softThump', riser:'softRiser', cash:'chime'}),
+    v5:Object.assign({},SOFT,{trans:'softWhoosh', whoosh:'silkSwipe', swish:'silkSwipe', pop:'softPop', impact:'softThump', cash:'chime', riser:'softRiser', type:'softType'})
   };
 
 
@@ -114,6 +115,7 @@ const SFX=(()=>{
     qua:{root:41, drums:'trap',    piano:false, pad:'tech', arp:true,  cow:false, strings:false, vinyl:false, b808:.75, hats:.15, braam:false},
     qui:{root:38, drums:'boombap', piano:true,  pad:'soft', arp:false, cow:false, strings:false, vinyl:true,  b808:.6,  hats:.11, braam:false},
     sex:{root:40, drums:'phonk',   piano:false, pad:'dark', arp:false, cow:true,  strings:false, vinyl:false, b808:1.0, hats:.14, braam:false},
+    v5:{root:45, drums:'soft',    piano:true,  pad:'soft', arp:false, cow:false, strings:false, vinyl:false, b808:.5,  hats:.09, braam:false},
     sab:{root:36, drums:'epic',    piano:false, pad:'soft', arp:false, cow:false, strings:true,  vinyl:false, b808:.6,  hats:.09, braam:false}
   };
   const SCALE=[0,2,3,5,7,8,10], PROGS=[[0,5,2,6],[0,6,5,4],[0,3,5,4],[0,5,6,4]];

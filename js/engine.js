@@ -76,7 +76,7 @@ const DAYCFG={
   sab:{bpm:96, motion:'zoomin', accent:'glow', hero:'pendulum',trans:'zoom',light:.3,   l1:'O resultado da', tag:'de toda a turma', quote:['Uma turma. Um propósito.','Um resultado.'], open:[]}
 };
 let D=DAYCFG.seg;
-function useDay(d){ D=DAYCFG[d]||DAYCFG.seg; P=PALS[d]||PALS.seg; }
+function useDay(d){ if(typeof V5==='function'&&V5()){ D=D5; P=P5; return; } D=DAYCFG[d]||DAYCFG.seg; P=PALS[d]||PALS.seg; }
 
 /* ---------- utilidades ---------- */
 function ls(c,px){ if('letterSpacing' in c) c.letterSpacing=px+'px'; }
@@ -269,7 +269,7 @@ const HEROES={emblem:heroEmblem,money:heroMoney,coin:heroCoin,book:heroBook,news
 /* =====================================================================
    CENAS
    ===================================================================== */
-function dateLabel(){ return MODE==='week'?(WK?WK.range:''):(days[curDay]?days[curDay].date:''); }
+function dateLabel(){ return MODE==='week'?(WK?WK.range:''):MODE==='parcial'?(PZ?PZ.range:''):(days[curDay]?days[curDay].date:''); }
 function pill(c,s,cx,cy,font,bg=P.solid,fg=P.onSolid,sp=4){ const w=tw(c,s,font,sp)+70, h=parseInt(font.match(/(\d+)px/)[1])*1.9; c.save(); shadowOn(c,26,12,.25); rr(c,cx-w/2,cy-h/2,w,h,h/2); c.fillStyle=bg; c.fill(); shadowOff(c); c.restore(); txt(c,s,cx,cy+2,font,fg,'center',sp); }
 function corners(c,k){ chevron(c,110,380,120,0,k); chevron(c,970,1440,120,Math.PI,k); }
 
@@ -879,6 +879,8 @@ function mkScene(kind,base,fn,cues){ const d=beatDur(base), k=base/d; return {ki
 /* final: o contador termina no tempo 1 do 2º compasso; softRiser antes e chime no valor */
 function outScene(kind,base,fn,cues){ const d=beatDur(base); OUTB=(60/(D.bpm||100))*base/d; const ce=4*OUTB, sk=base/d; return mkScene(kind,base,fn,(cues||[]).concat([[ce-.95*sk,'riser'],[ce,'cash'],[ce+.02,'impact']])); }
 function buildScenes(){
+  if(MODE==='parcial') return buildParcial();
+  if(MODE==='week') return buildWeek5();
   if(MODE==='week'){ if(!WK||!WK.rank.length) return [];
     const sc=[mkScene('cover',5.4,sceneCover,COVER_CUES.sab),
       mkScene('bars',5.0,sceneBars,[[.05,'type'],[.25,'impact']].concat([0,1,2,3,4].map(k=>[.5+k*.15,'swish'])).concat([[1.7,'shimmer'],[2.0,'pop'],[2.15,'cash'],[2.6,'type']])),
@@ -896,10 +898,10 @@ function sceneStart(k){ let t=0; for(let i=0;i<k;i++) t+=SCENES[i].dur; return t
 function renderTo(c,sc,u){ c.setTransform(Q,0,0,Q,0,0); c.clearRect(0,0,W,H); c.globalAlpha=1; sc.render(c,u); }
 function draw(t){
   useDay(curDay); ctx.setTransform(Q,0,0,Q,0,0); ctx.globalAlpha=1;
-  paper(ctx,t); topMark(ctx);
-  if(!SCENES.length){ txt(ctx,MODE==='week'?'Sem resultados na semana':'Marque quem operou hoje',540,960,fSerif(54),P.grey,'center'); grain(ctx,t); return guides(); }
+  if(V5()) bg5(ctx,t); else paper(ctx,t); topMark(ctx);
+  if(!SCENES.length){ txt(ctx,MODE==='week'?'Sem resultados na semana':MODE==='parcial'?'Sem resultados de segunda a quarta':'Marque quem operou hoje',540,960,fSerif(54),P.grey,'center'); grain(ctx,t); return guides(); }
   let k=0, st=0; while(k<SCENES.length-1&&t>=st+SCENES[k].dur){ st+=SCENES[k].dur; k++; } const sc=SCENES[k], local=Math.min(t-st,sc.dur);
-  if(k>0&&local<TR){ const pv=SCENES[k-1]; renderTo(sA,pv,pv.dur); renderTo(sB,sc,local); ctx.setTransform(Q,0,0,Q,0,0); transition(local/TR); }
+  if(k>0&&local<TR){ const pv=SCENES[k-1]; renderTo(sA,pv,pv.dur); renderTo(sB,sc,local); ctx.setTransform(Q,0,0,Q,0,0); if(V5()) trans5(local/TR); else transition(local/TR); }
   else { ctx.save(); sc.render(ctx,local); ctx.restore(); }
   ctx.setTransform(Q,0,0,Q,0,0); ctx.globalAlpha=1;
   txt(ctx,'Resultados individuais. Não representam promessa ou garantia de ganhos.',540,1484,fMed(20),P.disc,'center');
@@ -920,11 +922,12 @@ function computeWeek(){
   return {dayTotals,dates,incl,ops,rank,total:dayTotals.reduce((a,b)=>a+b,0),range:shortDate(days[first].date)+' a '+shortDate(days[last].date)};
 }
 async function prepare(){
+  MODE=curDay==='sab'?'week':(curDay==='qua'&&parcialOn())?'parcial':'day';
   useDay(curDay);
   await Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{})));
   await loadLogo();
-  MODE=curDay==='sab'?'week':'day';
-  if(MODE==='week'){ WK=computeWeek(); await Promise.all(WK.rank.map(async s=>{ s._a=await getImg(avatarSrc(s),420); s._ab=tiny(s._a,24); })); S=[]; }
+  if(MODE==='parcial'){ await prepareParcial(); S=[]; }
+  else if(MODE==='week'){ WK=computeWeek(); await Promise.all(WK.rank.map(async s=>{ s._a=await getImg(avatarSrc(s),420); s._ab=tiny(s._a,24); })); S=[]; }
   else { const list=roster.map(r=>{ const e=entry(curDay,r.id); return {...r,value:e.value,on:e.on,fx:e.fx,fy:e.fy,print:printSrc(curDay,r.id,e),avatar:avatarSrc(r)}; }).filter(s=>s.on);
     if(list.length){ let top=0; list.forEach((s,k)=>{ if(s.value>list[top].value) top=k; }); S=[list[top],...list.filter((_,k)=>k!==top)]; } else S=[];
     await Promise.all(S.map(async s=>{ s._p=await getImg(s.print,1500); s._a=await getImg(s.avatar,420); s._pt=tiny(s._p,16); s._at=tiny(s._a,10); s._ab=tiny(s._a,24); s._ag=s._a; })); }

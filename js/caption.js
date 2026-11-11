@@ -25,6 +25,15 @@ function captionSeed(variant){ const dt=parseDate(days[curDay]&&days[curDay].dat
 
 function buildCaption(variant=0){
   const seed=captionSeed(variant);
+  if(MODE==='parcial'){ if(!PZ||!PZ.list.length) return ''; const top=PZ.list[0], all3=PZ.list.filter(s=>s.days.every(x=>x.on&&x.value>0)), best=PZ.dayTotals.indexOf(Math.max(...PZ.dayTotals)), L=[];
+    L.push(pickV(['Parcial da semana na Trader School 📊','Metade da semana e a turma no verde 📊','Segunda, terça e quarta: o placar parcial da turma 📊'],seed)); L.push('');
+    L.push(`De ${PZ.range}, ${PZ.list.length} ${PZ.list.length>1?'alunos somaram':'aluno somou'} ${brl(PZ.total)} em ${PZ.ops} operações no lucro.`);
+    L.push(`O dia mais forte até aqui foi ${DAY_TXT[PDAYS[best]].nome.toLowerCase()}, com ${brl(PZ.dayTotals[best])}.`);
+    L.push(''); L.push(`🏆 Destaque da parcial: ${who(top)} com +${brl(top.total)}. Parabéns!`);
+    const rest=PZ.list.slice(1).map(s=>handleOf(s)||s.name); if(rest.length) L.push('Também no verde: '+rest.join(', ')+'.');
+    if(all3.length>1) L.push(`${all3.length} alunos ficaram no verde nos três dias: constância é o nome do jogo.`);
+    L.push(''); L.push('E no sábado tem o fechamento da semana com a turma completa.');
+    L.push(''); L.push(pickV(CTA,seed)); L.push(pickV(BIO,seed+1)); L.push(''); L.push(DISC); L.push(''); L.push(CAPTION_TAGS); return L.join('\n'); }
   if(curDay==='sab'){ if(!WK||!WK.rank.length) return '';
     const best=WK.dayTotals.indexOf(Math.max(...WK.dayTotals)), top=WK.rank.slice(0,3), daysOn=WK.dayTotals.filter(v=>v>0).length;
     const all=WK.rank.filter(s=>s.days.filter(Boolean).length===daysOn&&daysOn>1);

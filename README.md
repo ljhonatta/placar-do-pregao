@@ -38,3 +38,9 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 | Sábado | Semana (pódio, ranking) | Pódio em pedestal, demais em fila, logo em pêndulo | Zoom | softWhoosh, softThump, chime, softRiser | 96 BPM · cordas |
 
 Áudio: escolha no painel entre **Música + efeitos**, **Só efeitos** ou **Sem som** (vale para a prévia e para o .wav). Cada cena dura um número inteiro de compassos, então os cortes caem no tempo 1, e a música abaixa sozinha sob os efeitos principais.
+
+## v5 · Postagem na quarta e no sábado
+- **Quarta (aba QUA):** vídeo parcial com segunda, terça e quarta de cada aluno: capa com os 3 dias, destaque da parcial, um card por aluno com os 3 prints em 3D e o total, e o total da turma por dia. Dá para desligar em "Na aba QUA, gerar o vídeo parcial" e voltar ao vídeo só da quarta.
+- **Sábado (aba SÁB):** fechamento da semana com a turma inteira: capa com os 5 dias, colunas 3D por dia, pódio, ranking completo e total.
+- Padrão visual único em 3D (palco escuro, chão em perspectiva, cartões girando com reflexo), transição padrão de empurrar em 3D e sons leves.
+- Os lançamentos continuam sendo feitos dia a dia, como antes.
