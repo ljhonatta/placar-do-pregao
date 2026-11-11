@@ -60,8 +60,9 @@ function panelDay(s,j,u,i){ const x=s.days[j]; return (g,w,h)=>{ rr(g,0,0,w,h,22
     else { g.fillStyle='#1B1B1F'; g.fillRect(10,py,w-20,ph); txt(g,x.on?'SEM PRINT':'NÃO OPEROU',w/2,py+ph/2,fBold(20),'#8A8782','center',3); }
     g.restore(); g.strokeStyle='rgba(0,0,0,.08)'; g.lineWidth=2; rr(g,1,1,w-2,h-2,22); g.stroke();
     const t0=.95+j*.4, v=x.value*eo(seg(u,t0,t0+.45));
-    if(x.on&&x.value>0){ const vf=fBlack(fitF(g,'+'+brl(x.value),w-30,fBlack,34)); txt(g,'+'+brl(v),w/2,h-44,vf,K,'center'); g.fillStyle=O; g.fillRect(w/2-30,h-16,60,5); }
-    else txt(g,'—',w/2,h-44,fBlack(34),'#B8B4AE','center'); }; }
+    g.save(); rr(g,10,h-84,w-20,74,16); g.fillStyle=x.on&&x.value>0?O:'#2A2A2E'; g.fill(); g.restore();
+    if(x.on&&x.value>0){ const vf=fBlack(fitF(g,'+'+brl(x.value),w-44,fBlack,36)); txt(g,'+'+brl(v),w/2,h-47,vf,K,'center'); }
+    else txt(g,'—',w/2,h-47,fBlack(34),'#8A8782','center'); }; }
 
 /* ---------- QUARTA: parcial (segunda a quarta) ---------- */
 function coverP(c,t){ soft(c,'PARCIAL DA SEMANA',540,420,fBold(30),O,t,.05,'type',{dur:.5,sp:8});
@@ -86,8 +87,10 @@ function hlP(c,t){ const s=PZ.list[0];
   soft(c,'Parabéns!',540,1346,fSerif(60),WH,t,2.2,'rise'); }
 function studentP(c,i,u,run){ const s=PZ.list[i], n=PZ.list.length;
   soft(c,i===0?'O destaque,':D5.open[(i-1)%D5.open.length],540,410,fSerif(42),O,u,.05,'ghost');
-  const nm=s.name.toUpperCase(); soft(c,nm,540,482,fBlack(fitF(c,nm,900,fBlack,84)),WH,u,.15,'rise',{big:true});
-  if(s.handle&&s.handle.length>1) tagBox(c,s.handle,540,548,fMed(24),u,.4,O,K);
+  const nm=s.name.toUpperCase(), nf=fBlack(fitF(c,nm,720,fBlack,78)), hasH=s.handle&&s.handle.length>1, gw=Math.max(tw(c,nm,nf),hasH?tw(c,s.handle,fMed(24))+30:0), ar=60, gx=540-(ar*2+26+gw)/2, ax=gx+ar, ay=hasH?500:486, tx0=gx+ar*2+26;
+  const ka=back(seg(u,.1,.5)); if(ka>0){ c.save(); c.translate(ax,ay); c.scale(ka,ka); c.save(); c.shadowColor='rgba(255,106,19,.6)'; c.shadowBlur=24*Q; c.fillStyle=O; c.beginPath(); c.arc(0,0,ar+5,0,7); c.fill(); c.restore(); c.restore(); avatar(c,s._a,ax,ay,ar*ka); }
+  soft(c,nm,tx0,hasH?474:486,nf,WH,u,.15,'rise',{big:true,align:'left'});
+  if(hasH) tagBox(c,s.handle,tx0,540,fMed(24),u,.4,O,K,'left');
   [[0,205,.5],[2,875,-.5],[1,540,0]].forEach(([j,x,ry])=>{ const k=eo(seg(u,.3+j*.15,1.0+j*.15)), f=Math.sin(Math.PI*seg(u,.95+j*.4,1.45+j*.4)), fl=Math.sin(u*1.3+j)*4*k;
     card3D(c,'sp'+j,290,440,x,850+(1-k)*120+fl,ry+(1-k)*1.4*(j===2?1:-1),panelDay(s,j,u,i),{scale:(j===1?1.06:.94)*(.82+.18*k)+.05*f,alpha:k,glow:f*.9}); });
   const kp=eo(seg(u,.6,1.1)); if(kp<=0) return; c.save(); c.globalAlpha*=kp; c.translate(0,(1-kp)*70);
