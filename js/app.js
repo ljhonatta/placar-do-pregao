@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='5.1.0';
+const APP_VERSION='5.2.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -65,7 +65,8 @@ function status(m,warn){ $('status').textContent=m; $('status').classList.toggle
 let AC=null, ASRC=null, musicSeed=0;
 try{ musicSeed=+(localStorage.getItem('placar:musicSeed')||0)||0; }catch(e){}
 let audioMode='music';
-function musicOpts(){ return {mode:audioMode,music:audioMode==='music',vol:$('musicVol')?(+$('musicVol').value)/100:.7,seed:musicSeed,plan:musicPlan()}; }
+const trackSync=()=>!!(typeof TRACK!=='undefined'&&TRACK&&(audioMode==='track'||audioMode==='trackOnly'));
+function musicOpts(){ return {mode:audioMode,track:trackSync()?TRACK:null,music:audioMode==='music',vol:$('musicVol')?(+$('musicVol').value)/100:.7,seed:musicSeed,plan:musicPlan()}; }
 const sfxOn=()=>audioMode!=='none';
 function stopSound(){ try{ if(ASRC) ASRC.stop(); }catch(e){} ASRC=null; }
 function runTimeline(startAt=0,sound=false){ const id=++loopId, D=dur(); let t0=null; stopSound();
@@ -236,9 +237,17 @@ $('shareS').onclick=async()=>{ const files=lastStories.map(s=>new File([s.blob],
 $('dlS').onclick=async()=>{ for(const s of lastStories){ downloadBlob(s.blob,s.name); await sleep(350); } status('Downloads iniciados: '+lastStories.length+' imagens.'); };
 $('parcial').onchange=()=>{ try{ localStorage.setItem('placar:parcial',$('parcial').checked?'1':'0'); }catch(e){} stopSound(); preview(); };
 /* áudio: Música + efeitos · Só efeitos · Sem som (salvo no aparelho) */
-function applyAudioMode(m){ audioMode=['music','sfx','none'].includes(m)?m:'music'; document.querySelectorAll('input[name=amode]').forEach(r=>r.checked=r.value===audioMode); $('musicVol').disabled=audioMode!=='music'; $('musicSeed').disabled=audioMode!=='music'; $('musicVolLbl').classList.toggle('off',audioMode!=='music'); }
-document.querySelectorAll('input[name=amode]').forEach(r=>r.onchange=()=>{ if(!r.checked) return; applyAudioMode(r.value); stopSound(); Store.set('audioMode',audioMode).catch(()=>{}); });
-applyAudioMode('music'); Store.get('audioMode').then(m=>{ if(m) applyAudioMode(m); }).catch(()=>{});
+function applyAudioMode(m){ const ok=['music','track','trackOnly','sfx','none']; audioMode=ok.includes(m)?m:'music'; if((audioMode==='track'||audioMode==='trackOnly')&&!TRACK) audioMode='music';
+  document.querySelectorAll('input[name=amode]').forEach(r=>r.checked=r.value===audioMode); const vol=audioMode==='music'||audioMode==='track'||audioMode==='trackOnly'; $('musicVol').disabled=!vol; $('musicSeed').disabled=audioMode!=='music'; $('musicVolLbl').classList.toggle('off',!vol);
+  document.querySelectorAll('.needTrack').forEach(el=>el.classList.toggle('off',!TRACK)); document.querySelectorAll('input.needTrack').forEach(el=>el.disabled=!TRACK); }
+document.querySelectorAll('input[name=amode]').forEach(r=>r.onchange=()=>{ if(!r.checked) return; applyAudioMode(r.value); stopSound(); Store.set('audioMode',audioMode).catch(()=>{}); preview(); });
+function trackInfo(){ $('trackName').textContent=TRACK?(TRACK.name.replace(/\.[a-z0-9]+$/i,'')+' · '+Math.round(TRACK.bpm)+' BPM · '+Math.round(TRACK.dur)+' s'):'nenhuma enviada'; $('trackDel').hidden=!TRACK; }
+$('trackIn').onchange=async ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(!f) return; status('Analisando a batida da música…');
+  try{ await setTrack(f); trackInfo(); applyAudioMode('track'); Store.set('audioMode','track').catch(()=>{}); stopSound(); await preview(); status('Trilha salva neste aparelho: '+Math.round(TRACK.bpm)+' BPM. Os cortes agora caem na batida dela.'); }
+  catch(e){ status('Não consegui ler esse arquivo de áudio. Envie MP3, M4A ou WAV.',true); } };
+$('trackDel').onclick=async()=>{ await clearTrack(); trackInfo(); applyAudioMode('music'); Store.set('audioMode','music').catch(()=>{}); stopSound(); preview(); status('Trilha removida deste aparelho.'); };
+applyAudioMode('music'); trackInfo();
+(async()=>{ await loadTrackFromStore(); trackInfo(); let m=null; try{ m=await Store.get('audioMode'); }catch(e){} applyAudioMode(m||(TRACK?'track':'music')); if(TRACK&&loaded) preview(); })();
 $('musicVol').oninput=()=>{ try{ localStorage.setItem('placar:musicVol',$('musicVol').value); }catch(e){} };
 $('musicSeed').onclick=()=>{ musicSeed=(musicSeed+1)%97; try{ localStorage.setItem('placar:musicSeed',musicSeed); }catch(e){} status('Trilha: variação '+(musicSeed+1)+'. Toque em "Tocar prévia" para ouvir.'); };
 

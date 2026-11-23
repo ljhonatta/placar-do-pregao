@@ -76,7 +76,8 @@ const DAYCFG={
   sab:{bpm:96, motion:'zoomin', accent:'glow', hero:'pendulum',trans:'zoom',light:.3,   l1:'O resultado da', tag:'de toda a turma', quote:['Uma turma. Um propósito.','Um resultado.'], open:[]}
 };
 let D=DAYCFG.seg;
-function useDay(d){ if(typeof V5==='function'&&V5()){ D=D5; P=P5; return; } D=DAYCFG[d]||DAYCFG.seg; P=PALS[d]||PALS.seg; }
+function useDay(d){ if(typeof V5==='function'&&V5()){ D=D5; P=P5; } else { D=DAYCFG[d]||DAYCFG.seg; P=PALS[d]||PALS.seg; }
+  if(typeof trackSync==='function'&&trackSync()) D=Object.assign({},D,{bpm:TRACK.bpm}); }
 
 /* ---------- utilidades ---------- */
 function ls(c,px){ if('letterSpacing' in c) c.letterSpacing=px+'px'; }
@@ -875,10 +876,14 @@ function transition(p){ const e=eio(p);
 /* cada cena dura um número inteiro de compassos da trilha do dia (cortes caem no tempo 1);
    a animação recebe o tempo normalizado para a duração de base, então nada fica corrido nem arrastado */
 function beatDur(base){ const bpm=D.bpm||100, beats=Math.max(8,Math.round(base*bpm/60/4)*4); return beats*60/bpm; }
-function mkScene(kind,base,fn,cues){ const d=beatDur(base), k=base/d; return {kind,dur:d,render:(c,u)=>fn(c,u*k),cues:(cues||[]).map(([t,n])=>[t/k,n])}; }
+function mkScene(kind,base,fn,cues){ const o={kind,base,dur:beatDur(base),raw:cues||[]}; o.render=(c,u)=>fn(c,u*o.base/o.dur); o.cues=o.raw.map(([t,n])=>[t*o.dur/o.base,n]); return o; }
 /* final: o contador termina no tempo 1 do 2º compasso; softRiser antes e chime no valor */
-function outScene(kind,base,fn,cues){ const d=beatDur(base); OUTB=(60/(D.bpm||100))*base/d; const ce=4*OUTB, sk=base/d; return mkScene(kind,base,fn,(cues||[]).concat([[ce-.95*sk,'riser'],[ce,'cash'],[ce+.02,'impact']])); }
-function buildScenes(){ const sc=buildScenesBase(); return typeof proScenes==='function'?proScenes(sc):sc; }
+function outScene(kind,base,fn,cues){ const d=beatDur(base); OUTB=(60/(D.bpm||100))*base/d; const ce=4*OUTB, sk=base/d; const o=mkScene(kind,base,fn,(cues||[]).concat([[ce-.95*sk,'riser'],[ce,'cash'],[ce+.02,'impact']])); o.isOut=true; return o; }
+function buildScenes(){ let sc=buildScenesBase(); if(typeof proScenes==='function') sc=proScenes(sc); if(typeof trackSync==='function'&&trackSync()&&TRACK.beats) retimeToTrack(sc); return sc; }
+/* com a trilha própria: cada cena começa e termina numa batida real da música (o andamento pode variar um pouco) */
+function retimeToTrack(sc){ const est=sc.reduce((a,s)=>a+s.dur,0)*1.3+20, B=videoBeats(TRACK,est), avg=60/TRACK.bpm; let idx=0;
+  const at=i=>i<B.length?B[i]:B[B.length-1]+(i-B.length+1)*avg;
+  sc.forEach(o=>{ const nb=Math.max(4,Math.round(o.dur/avg)), d=at(idx+nb)-at(idx); o.dur=d; o.cues=o.raw.map(([t,n])=>[t*o.dur/o.base,n]); if(o.isOut) OUTB=(d/nb)*o.base/d; idx+=nb; }); }
 function buildScenesBase(){
   if(MODE==='parcial') return buildParcial();
   if(MODE==='week') return buildWeek5();

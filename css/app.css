@@ -133,3 +133,7 @@ button:disabled{opacity:.4;cursor:default}
 .mkt .mrow{display:flex;gap:12px;flex-wrap:wrap}
 .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
 .sgrid img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.14);cursor:pointer;background:#000}
+
+.amode .trackRow{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:15px}
+.amode .needTrack.off{opacity:.4}
+.amode .note{flex-basis:100%;margin:0}

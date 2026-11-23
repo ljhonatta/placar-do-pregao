@@ -49,3 +49,8 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - **Abertura do pregão (opcional):** em cada dia, preencha a manchete e a variação do Ibovespa/dólar. O Reels abre com a fita de cotações, a manchete, o gráfico de velas e o Touro x Urso (urso quando o Ibovespa caiu; o touro é o logo da Trader School virando o jogo). Fica salvo numa chave própria (`market`), entra no backup e não mexe nos resultados.
 - **Painel de cotações:** antes do final, cada aluno aparece como ativo (KEKO3 ▲ +R$ 5.784,00) com o total da turma. Pode desligar no painel.
 - **Stories:** botão "Gerar stories" cria imagens 1080×1920 só com o nosso logo e dentro da área segura: a turma do dia + um story por aluno com o print. Na quarta entra também a parcial (seg a qua); no sábado, o fechamento da semana.
+
+## v5.2 · Minha trilha (música padrão da marca)
+- Em "Áudio", toque em **Enviar música** e escolha a trilha padrão (MP3/M4A/WAV). Ela fica salva **só neste aparelho** (e no backup), nunca no site público.
+- O app detecta a batida batida a batida (o andamento pode variar), acha o tempo 1 de cada compasso e um trecho de loop num ponto forte da música.
+- Com **Minha trilha + efeitos** ou **Só minha trilha**, cada cena do vídeo começa e termina numa batida real da música, e o .wav já sai com a trilha alinhada (no CapCut, coloque no segundo zero).
