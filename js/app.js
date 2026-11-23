@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='5.0.1';
+const APP_VERSION='5.1.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -172,7 +172,7 @@ function renderTabs(){ const T=$('tabs'); T.innerHTML=''; const tk=todayInfo().k
     const has=d!=='sab'&&Object.values(days[d].entries).some(e=>e.on);
     b.innerHTML=`${THEMES[d].tab}<small>${days[d].key===tk?'HOJE':shortDate(days[d].date)}</small>${has?'<i class="dot"></i>':''}`;
     b.onclick=()=>{ if(busy) return; curDay=d; renderAll(); preview(); }; T.appendChild(b); }); }
-function renderAll(){ renderWeekNav(); renderTabs(); const wk=curDay==='sab'; $('dayPanel').hidden=wk; $('weekPanel').hidden=!wk;
+function renderAll(){ renderWeekNav(); renderTabs(); if(typeof mktFill==='function'&&$('mHead')) mktFill(); const wk=curDay==='sab'; $('dayPanel').hidden=wk; $('weekPanel').hidden=!wk;
   $('panelTitle').textContent=wk?'Resultado da semana':(THEMES[curDay].label.charAt(0)+THEMES[curDay].label.slice(1).toLowerCase()+' · '+days[curDay].date);
   if(wk) renderWeek(); else renderList(); }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -215,7 +215,25 @@ async function changeWeek(){ buildWeek(); await preloadUrls(); renderAll(); prev
 $('play').onclick=()=>{ if(sfxOn()){ try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); AC.resume(); }catch(e){} } preview(undefined,true); }; $('rec').onclick=record; $('guides').onchange=()=>{ if(!busy) preview(); };
 try{ if(localStorage.getItem('placar:tickers')==='0') $('tickers').checked=false; }catch(e){}
 try{ const v=localStorage.getItem('placar:musicVol'); if(v) $('musicVol').value=v; }catch(e){}
-try{ if(localStorage.getItem('placar:parcial')==='0') $('parcial').checked=false; }catch(e){}
+try{ if(localStorage.getItem('placar:parcial')==='0') $('parcial').checked=false; if(localStorage.getItem('placar:board')==='0') $('board').checked=false; }catch(e){}
+$('board').onchange=()=>{ try{ localStorage.setItem('placar:board',$('board').checked?'1':'0'); }catch(e){} stopSound(); preview(); };
+/* abertura do pregão: manchete e variações do dia (chave própria, não mexe nos resultados) */
+let mktTimer=0;
+function mktFill(){ const d=days[curDay]&&days[curDay].date, m=(d&&MARKET[d])||{}; $('mHead').value=m.head||''; $('mIbov').value=m.ibov||''; $('mUsd').value=m.usd||''; $('mktState').textContent=(m.head||m.ibov||m.usd)?'(ligada neste dia)':'(opcional)'; }
+function mktSave(){ const d=days[curDay]&&days[curDay].date; if(!d) return; const m={head:$('mHead').value.trim(),ibov:$('mIbov').value.trim(),usd:$('mUsd').value.trim()}; if(m.head||m.ibov||m.usd) MARKET[d]=m; else delete MARKET[d];
+  $('mktState').textContent=(m.head||m.ibov||m.usd)?'(ligada neste dia)':'(opcional)'; clearTimeout(mktTimer); mktTimer=setTimeout(()=>{ Store.set('market',MARKET).catch(()=>{}); preview(); },700); }
+['mHead','mIbov','mUsd'].forEach(id=>$(id).addEventListener('input',mktSave));
+$('mClear').onclick=()=>{ $('mHead').value=''; $('mIbov').value=''; $('mUsd').value=''; mktSave(); };
+/* stories */
+let lastStories=[];
+$('stories').onclick=async()=>{ if(busy) return; status('Montando os stories…'); $('storiesBox').hidden=true; try{ lastStories.forEach(s=>URL.revokeObjectURL(s.url)); lastStories=await makeStories(); }catch(e){ lastStories=[]; }
+  if(!lastStories.length){ status('Não há resultados lançados neste dia para os stories.',true); return; }
+  $('sgrid').innerHTML=''; lastStories.forEach(s=>{ const im=new Image(); im.src=s.url; im.alt=s.name; im.title=s.name; im.onclick=()=>downloadBlob(s.blob,s.name); $('sgrid').appendChild(im); });
+  $('storiesName').textContent=lastStories.length+(lastStories.length>1?' stories prontos':' story pronto'); $('storiesBox').hidden=false;
+  const files=lastStories.map(s=>new File([s.blob],s.name,{type:'image/png'})); $('shareS').hidden=!(navigator.canShare&&navigator.canShare({files}));
+  status('Stories prontos: salve no celular e poste na ordem (a turma primeiro, depois cada aluno).'); };
+$('shareS').onclick=async()=>{ const files=lastStories.map(s=>new File([s.blob],s.name,{type:'image/png'})); try{ await navigator.share({files,title:'Stories · Trader School'}); }catch(e){ if(e&&e.name!=='AbortError') status('Não deu pra compartilhar. Use "Baixar todos".',true); } };
+$('dlS').onclick=async()=>{ for(const s of lastStories){ downloadBlob(s.blob,s.name); await sleep(350); } status('Downloads iniciados: '+lastStories.length+' imagens.'); };
 $('parcial').onchange=()=>{ try{ localStorage.setItem('placar:parcial',$('parcial').checked?'1':'0'); }catch(e){} stopSound(); preview(); };
 /* áudio: Música + efeitos · Só efeitos · Sem som (salvo no aparelho) */
 function applyAudioMode(m){ audioMode=['music','sfx','none'].includes(m)?m:'music'; document.querySelectorAll('input[name=amode]').forEach(r=>r.checked=r.value===audioMode); $('musicVol').disabled=audioMode!=='music'; $('musicSeed').disabled=audioMode!=='music'; $('musicVolLbl').classList.toggle('off',audioMode!=='music'); }
@@ -236,7 +254,7 @@ window.addEventListener('focus',checkDayChange); setInterval(checkDayChange,6000
 /* ---------- backup ---------- */
 const blobToData=b=>new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(b); });
 $('backup').onclick=async()=>{ status('Montando backup…'); const keys=await Store.imgKeys(); const imgs={}; for(const k of keys){ const b=await Store.getImg(k); if(b) imgs[k]=await blobToData(b); }
-  const data={app:'placar-do-pregao',version:1,savedAt:new Date().toISOString(),roster,results:prunedResults(),imgs};
+  const data={app:'placar-do-pregao',version:1,savedAt:new Date().toISOString(),roster,results:prunedResults(),market:MARKET,imgs};
   const blob=new Blob([JSON.stringify(data)],{type:'application/json'}), name='placar-backup-'+todayInfo().key+'.json';
   const file=new File([blob],name,{type:'application/json'});
   if(navigator.canShare&&navigator.canShare({files:[file]})&&/iPhone|iPad|Android/i.test(navigator.userAgent)){ try{ await navigator.share({files:[file]}); status('Backup pronto.'); return; }catch(e){} }
@@ -244,7 +262,7 @@ $('backup').onclick=async()=>{ status('Montando backup…'); const keys=await St
 $('restore').onchange=async ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
   try{ const data=JSON.parse(await f.text()); if(data.app!=='placar-do-pregao') throw 0;
     for(const [k,d] of Object.entries(data.imgs||{})){ const b=await (await fetch(d)).blob(); await Store.putImg(k,b); }
-    roster=data.roster; results=data.results||{}; urls.clear(); await doSave(); buildWeek(); await preloadUrls(); renderAll(); preview(); status('Backup restaurado.'); }
+    roster=data.roster; results=data.results||{}; if(data.market&&typeof data.market==='object'){ MARKET=data.market; await Store.set('market',MARKET); } urls.clear(); await doSave(); buildWeek(); await preloadUrls(); renderAll(); preview(); status('Backup restaurado.'); }
   catch(e){ status('Esse arquivo não é um backup do Placar.',true); } };
 
 /* ---------- instalar e atualizar ---------- */
@@ -268,7 +286,8 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
 (async()=>{
   curDay=todayTab(); buildWeek(); renderAll();
   try{
-    const [r,res]=await Promise.all([Store.get('roster'),Store.get('results')]);
+    const [r,res,mk]=await Promise.all([Store.get('roster'),Store.get('results'),Store.get('market')]);
+    if(mk&&typeof mk==='object') MARKET=mk;
     if(Array.isArray(r)&&r.length) roster=r;
     if(res&&typeof res==='object') results=res;
     if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});

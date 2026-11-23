@@ -32,6 +32,16 @@
     <div class="ctrl">
       <button type="button" id="play">Tocar prévia</button>
       <button type="button" class="primary" id="rec">Gerar vídeo</button>
+      <button type="button" id="stories">Gerar stories</button>
+    </div>
+    <div class="ready" id="storiesBox" hidden>
+      <strong id="storiesName">Stories prontos</strong>
+      <div class="sgrid" id="sgrid"></div>
+      <div class="ctrl">
+        <button type="button" class="primary" id="shareS">Salvar todos no celular</button>
+        <button type="button" id="dlS">Baixar todos</button>
+      </div>
+      <p class="note">1080×1920, só com o nosso logo e tudo dentro da área segura dos stories. Toque numa imagem para baixar só ela.</p>
     </div>
     <div class="ready" id="ready" hidden>
       <strong id="readyName">Vídeo pronto</strong>
@@ -58,6 +68,7 @@
       <button type="button" id="musicSeed">Outra variação da trilha</button>
     </div>
     <label class="toggle"><input type="checkbox" id="parcial" checked> Na aba QUA, gerar o vídeo parcial (segunda, terça e quarta de cada aluno)</label>
+    <label class="toggle"><input type="checkbox" id="board" checked> Painel de cotações no Reels (alunos como ativos: KEKO3 ▲)</label>
     <label class="toggle"><input type="checkbox" id="guides"> Mostrar áreas que o Reels cobre (só na prévia)</label>
     <p class="status" id="status" role="status"></p>
     <div class="caption" id="capBox" hidden>
@@ -79,6 +90,13 @@
     </div>
     <div class="tabs" id="tabs" role="group" aria-label="Dia do vídeo"></div>
     <h2 id="panelTitle">Turma do dia</h2>
+    <details class="mkt" id="mktBox">
+      <summary>Abertura do pregão <span class="note" id="mktState">(opcional)</span></summary>
+      <p class="note">Preencha e o Reels abre com a manchete do dia, o gráfico e o Touro x Urso: urso quando o Ibovespa caiu, touro (o nosso logo) virando o jogo. Use só números reais do dia.</p>
+      <label class="fl">Manchete do dia<input type="text" id="mHead" maxlength="140" placeholder="Ex.: Ibovespa recua com tensão no exterior"></label>
+      <div class="mrow"><label class="fl">Ibovespa no dia (%)<input type="text" id="mIbov" inputmode="decimal" placeholder="Ex.: -1,20"></label><label class="fl">Dólar no dia (%)<input type="text" id="mUsd" inputmode="decimal" placeholder="Ex.: 0,85"></label></div>
+      <button type="button" class="link" id="mClear">Limpar abertura deste dia</button>
+    </details>
 
     <div id="dayPanel">
       <p class="note">Marque quem operou, digite o valor com centavos (ex.: 1.274,50), envie o print e toque no resultado. O maior valor abre como Destaque do Dia. Os prints recebem uma melhoria automática de nitidez e contraste. Tudo é salvo sozinho neste aparelho.</p>
@@ -114,6 +132,7 @@
 <script src="js/store.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/v5.js"></script>
+<script src="js/pro.js"></script>
 <script src="js/sfx.js"></script>
 <script src="js/caption.js"></script>
 <script src="js/app.js"></script>

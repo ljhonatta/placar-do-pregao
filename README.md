@@ -44,3 +44,8 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - **Sábado (aba SÁB):** fechamento da semana com a turma inteira: capa com os 5 dias, colunas 3D por dia, pódio, ranking completo e total.
 - Padrão visual único em 3D (palco escuro, chão em perspectiva, cartões girando com reflexo), transição padrão de empurrar em 3D e sons leves.
 - Os lançamentos continuam sendo feitos dia a dia, como antes.
+
+## v5.1 · Abertura do pregão, painel de cotações e stories
+- **Abertura do pregão (opcional):** em cada dia, preencha a manchete e a variação do Ibovespa/dólar. O Reels abre com a fita de cotações, a manchete, o gráfico de velas e o Touro x Urso (urso quando o Ibovespa caiu; o touro é o logo da Trader School virando o jogo). Fica salvo numa chave própria (`market`), entra no backup e não mexe nos resultados.
+- **Painel de cotações:** antes do final, cada aluno aparece como ativo (KEKO3 ▲ +R$ 5.784,00) com o total da turma. Pode desligar no painel.
+- **Stories:** botão "Gerar stories" cria imagens 1080×1920 só com o nosso logo e dentro da área segura: a turma do dia + um story por aluno com o print. Na quarta entra também a parcial (seg a qua); no sábado, o fechamento da semana.

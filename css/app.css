@@ -125,3 +125,11 @@ input[type=text]{font-family:var(--body);font-size:18px;background:var(--ink);co
 .amode input{accent-color:var(--accent);width:18px;height:18px}
 .musicRow .vol.off{opacity:.4}
 button:disabled{opacity:.4;cursor:default}
+
+.mkt{border:1px solid rgba(255,106,19,.35);border-radius:12px;padding:10px 14px;margin:6px 0 14px}
+.mkt summary{cursor:pointer;font-weight:700}
+.mkt .fl{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-top:10px;flex:1}
+.mkt input{background:#0B0B0D;color:#F2F0EC;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:10px 12px;font:16px Montserrat,system-ui,sans-serif}
+.mkt .mrow{display:flex;gap:12px;flex-wrap:wrap}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.sgrid img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.14);cursor:pointer;background:#000}

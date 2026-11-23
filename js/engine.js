@@ -878,7 +878,8 @@ function beatDur(base){ const bpm=D.bpm||100, beats=Math.max(8,Math.round(base*b
 function mkScene(kind,base,fn,cues){ const d=beatDur(base), k=base/d; return {kind,dur:d,render:(c,u)=>fn(c,u*k),cues:(cues||[]).map(([t,n])=>[t/k,n])}; }
 /* final: o contador termina no tempo 1 do 2º compasso; softRiser antes e chime no valor */
 function outScene(kind,base,fn,cues){ const d=beatDur(base); OUTB=(60/(D.bpm||100))*base/d; const ce=4*OUTB, sk=base/d; return mkScene(kind,base,fn,(cues||[]).concat([[ce-.95*sk,'riser'],[ce,'cash'],[ce+.02,'impact']])); }
-function buildScenes(){
+function buildScenes(){ const sc=buildScenesBase(); return typeof proScenes==='function'?proScenes(sc):sc; }
+function buildScenesBase(){
   if(MODE==='parcial') return buildParcial();
   if(MODE==='week') return buildWeek5();
   if(MODE==='week'){ if(!WK||!WK.rank.length) return [];
