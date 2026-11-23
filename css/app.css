@@ -137,3 +137,9 @@ button:disabled{opacity:.4;cursor:default}
 .amode .trackRow{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:15px}
 .amode .needTrack.off{opacity:.4}
 .amode .note{flex-basis:100%;margin:0}
+
+.aigrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.aigrid figure{margin:0;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.aigrid img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:10px;background:#141418;border:1px solid rgba(255,255,255,.12)}
+.aigrid img:not([src]){visibility:hidden}
+.aigrid figcaption{font-size:13px;color:var(--muted)}

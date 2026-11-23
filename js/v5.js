@@ -65,7 +65,7 @@ function panelDay(s,j,u,i){ const x=s.days[j]; return (g,w,h)=>{ rr(g,0,0,w,h,22
     else txt(g,'—',w/2,h-47,fBlack(34),'#8A8782','center'); }; }
 
 /* ---------- QUARTA: parcial (segunda a quarta) ---------- */
-function coverP(c,t){ soft(c,'PARCIAL DA SEMANA',540,420,fBold(30),O,t,.05,'type',{dur:.5,sp:8});
+function coverP(c,t){ if(typeof AIIMG!=='undefined'&&(AIIMG.bull||AIIMG.bg)) aiBg(c,AIIMG.bg||AIIMG.bull,.42*eo(seg(t,0,.6)),t); soft(c,'PARCIAL DA SEMANA',540,420,fBold(30),O,t,.05,'type',{dur:.5,sp:8});
   [[0,290,-.42,1],[2,790,.42,1],[1,540,0,1.12]].forEach(([j,x,ry,sc])=>{ const k=eo(seg(t,.25+j*.15,1.0+j*.15)), fl=Math.sin(t*1.2+j)*5*k;
     card3D(c,'cp'+j,230,300,x,800+(1-k)*140+fl,ry+(1-k)*1.45*(j===2?1:-1),tileDay(THEMES[PDAYS[j]].tab,PZ.dates[j],PZ.dayTotals[j]>0?'+'+brl(PZ.dayTotals[j]):''),{scale:sc*(.82+.18*k),alpha:k,reflect:true}); });
   soft(c,'Resultado dos alunos',540,1150,fSerif(64),WH,t,1.1,'rise');
@@ -111,7 +111,7 @@ function outP(c,o){ const tot=PZ.total, dt=PZ.dayTotals, mx=Math.max(1,...dt), b
   soft(c,HANDLE,540,1384,fMed(28),'#9C9893',o,outCE()+.3,'type',{dur:.6}); }
 
 /* ---------- SÁBADO: semana completa, turma inteira ---------- */
-function coverW(c,t){ soft(c,'FECHAMENTO DA SEMANA',540,420,fBold(30),O,t,.05,'type',{dur:.5,sp:8});
+function coverW(c,t){ if(typeof AIIMG!=='undefined'&&(AIIMG.bull||AIIMG.bg)) aiBg(c,AIIMG.bg||AIIMG.bull,.42*eo(seg(t,0,.6)),t); soft(c,'FECHAMENTO DA SEMANA',540,420,fBold(30),O,t,.05,'type',{dur:.5,sp:8});
   [0,4,1,3,2].forEach(j=>{ const x=540+(j-2)*200, ry=(j-2)*.3, k=eo(seg(t,.25+j*.12,.95+j*.12)), fl=Math.sin(t*1.2+j)*4*k, v=WK.dayTotals[j];
     card3D(c,'cw'+j,180,250,x,800+(1-k)*140+fl,ry+(1-k)*1.4*(j<2?-1:1),tileDay(THEMES[WEEK[j]].tab,WK.dates[j]||'',v>0?'+'+brl(v):''),{scale:(j===2?1.1:.95)*(.82+.18*k),alpha:k,reflect:true}); });
   soft(c,'Resultado da turma',540,1150,fSerif(64),WH,t,1.1,'rise');

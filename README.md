@@ -54,3 +54,7 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - Em "Áudio", toque em **Enviar música** e escolha a trilha padrão (MP3/M4A/WAV). Ela fica salva **só neste aparelho** (e no backup), nunca no site público.
 - O app detecta a batida batida a batida (o andamento pode variar), acha o tempo 1 de cada compasso e um trecho de loop num ponto forte da música.
 - Com **Minha trilha + efeitos** ou **Só minha trilha**, cada cena do vídeo começa e termina numa batida real da música, e o .wav já sai com a trilha alinhada (no CapCut, coloque no segundo zero).
+
+## v5.3 · Leitura automática do print e imagens premium
+- **Valor automático:** ao anexar o print, o app lê o "Res. do Dia" (ou o "Res. Aberto", se o dia estiver zerado), preenche o valor e marca o zoom em cima dele. Tocando em outro número do print, ele lê esse número. A leitura roda no próprio aparelho (Tesseract.js em `vendor/ocr`, licença Apache-2.0); a imagem não sai do celular.
+- **Imagens premium (OpenAI):** com a chave da API colada no app (fica só no aparelho), gera o touro, o urso e o fundo de pregão em preto e laranja. Elas entram na abertura do pregão, no painel de cotações, nas capas 3D e no fundo dos stories.

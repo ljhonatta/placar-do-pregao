@@ -12,7 +12,7 @@ const hasMkt=()=>{ const m=mkt(); return !!(m.head||m.ibov!=null||m.usd!=null); 
 const boardOn=()=>!$('board')||$('board').checked;
 
 /* ---------- fundo de terminal ---------- */
-function terminalBg(c,t){ c.fillStyle='#070708'; c.fillRect(0,0,W,H); const g=c.createRadialGradient(540,1250,40,540,1250,900); g.addColorStop(0,'rgba(255,106,19,.16)'); g.addColorStop(1,'rgba(255,106,19,0)'); c.fillStyle=g; c.fillRect(0,0,W,H);
+function terminalBg(c,t,layers){ c.fillStyle='#070708'; c.fillRect(0,0,W,H); (layers||[]).forEach(([img,a])=>aiBg(c,img,a,t)); const g=c.createRadialGradient(540,1250,40,540,1250,900); g.addColorStop(0,'rgba(255,106,19,.16)'); g.addColorStop(1,'rgba(255,106,19,0)'); c.fillStyle=g; c.fillRect(0,0,W,H);
   c.save(); c.strokeStyle='rgba(255,255,255,.045)'; c.lineWidth=1; for(let x=0;x<=W;x+=60){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,H); c.stroke(); } for(let y=0;y<=H;y+=60){ c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke(); } c.restore(); logo(c,540,288,250,false,1); }
 function tape(c,t,y,items){ c.save(); c.fillStyle='#111114'; c.fillRect(0,y-30,W,60); c.fillStyle=O; c.fillRect(0,y-30,W,2); c.fillRect(0,y+28,W,2);
   c.font=fBold(24); const parts=items.map(([s,up])=>({s,up,w:c.measureText(s).width+70})), tot=parts.reduce((a,p)=>a+p.w,0)||1; let x=-((t*120)%tot);
@@ -33,7 +33,8 @@ function wrapLines(c,s,font,maxW,maxL){ const words=s.split(/\s+/).filter(Boolea
   if(L.length>maxL){ L.length=maxL; L[maxL-1]=ellip(c,L[maxL-1]+'…',maxW,font); } return L; }
 
 /* ---------- 1) Abertura do pregão (Touro x Urso) ---------- */
-function sceneOpen(c,t){ const m=mkt(), down=m.ibov!=null?m.ibov<0:false, neutral=m.ibov==null; terminalBg(c,t);
+function sceneOpen(c,t){ const m=mkt(), down=m.ibov!=null?m.ibov<0:false, neutral=m.ibov==null, bp=down?3.9:2.9, x=eo(seg(t,bp,bp+.6));
+  terminalBg(c,t,down?[[AIIMG.bear,.6*(1-x)],[AIIMG.bull,.6*x]]:[[AIIMG.bull,.6]]);
   const items=[]; if(m.ibov!=null) items.push(['IBOV '+(m.ibov>=0?'▲ ':'▼ ')+pctFmt(m.ibov),m.ibov>=0]); if(m.usd!=null) items.push(['DÓLAR '+(m.usd>=0?'▲ ':'▼ ')+pctFmt(m.usd),m.usd>=0]); items.push(['TRADER SCHOOL ▲',true]); items.push(['PREGÃO ABERTO',null]);
   const ka=eo(seg(t,0,.4)); c.save(); c.globalAlpha*=ka; tape(c,t,410,items); c.restore();
   soft(c,'ABERTURA DO PREGÃO',540,494,fBold(28),O,t,.25,'type',{dur:.5,sp:8}); soft(c,THEMES[curDay].label.toLowerCase()+' · '+(days[curDay]?days[curDay].date:''),540,540,fMed(24),'#9C9893',t,.45,'ghost');
@@ -60,7 +61,7 @@ function tickers(list){ const used={}; return list.map(s=>{ const ws=deAcc(s.nam
 function boardData(){ if(MODE==='parcial') return {list:PZ.list.map(s=>({name:s.name,value:s.total,_a:s._a})),sub:'Parcial · '+PZ.range,total:PZ.total,lbl:'TURMA SEG A QUA'};
   if(MODE==='week') return {list:WK.rank.map(s=>({name:s.name,value:s.total,_a:s._a})),sub:'Semana · '+WK.range,total:WK.total,lbl:'TURMA NA SEMANA'};
   return {list:S.map(s=>({name:s.name,value:s.value,_a:s._a})),sub:THEMES[curDay].label+' · '+(days[curDay]?days[curDay].date:''),total:S.reduce((a,s)=>a+s.value,0),lbl:'TURMA HOJE'}; }
-function sceneBoard(c,t){ const B=boardData(), n=B.list.length, show=B.list.slice(0,10), codes=tickers(show), rh=Math.min(80,Math.max(56,660/Math.max(1,show.length))); terminalBg(c,t);
+function sceneBoard(c,t){ const B=boardData(), n=B.list.length, show=B.list.slice(0,10), codes=tickers(show), rh=Math.min(80,Math.max(56,660/Math.max(1,show.length))); terminalBg(c,t,[[AIIMG.bg||AIIMG.bull,.35]]);
   soft(c,'PAINEL',540,420,fBold(26),O,t,.05,'type',{dur:.3,sp:10}); soft(c,'TRADER SCHOOL',540,484,fBlack(64),WH,t,.15,'rise',{big:true}); soft(c,B.sub,540,540,fMed(24),'#9C9893',t,.35,'ghost');
   const y0=590, ha=eo(seg(t,.3,.6)); c.save(); c.globalAlpha*=ha; txt(c,'ATIVO',110,y0,fBold(18),'#77736E','left',4); txt(c,'ALUNO',330,y0,fBold(18),'#77736E','left',4); txt(c,'RESULTADO',970,y0,fBold(18),'#77736E','right',4); c.fillStyle='rgba(255,255,255,.12)'; c.fillRect(90,y0+24,900,2); c.restore();
   show.forEach((s,k)=>{ const y=y0+40+k*rh+rh/2, f=seg(t,.5+k*.09,.8+k*.09); if(f<=0) return; const sy=Math.abs(Math.cos((1-eo(f))*Math.PI/2));
@@ -78,7 +79,7 @@ function proScenes(sc){ if(!sc.length) return sc;
 
 /* ---------- 3) Stories (imagens) ---------- */
 const STORY_SAFE={top:250,bottom:1600};
-function storyBg(g){ g.fillStyle='#0A0A0B'; g.fillRect(0,0,1080,1920); const r=g.createRadialGradient(540,1500,40,540,1500,900); r.addColorStop(0,'rgba(255,106,19,.20)'); r.addColorStop(1,'rgba(255,106,19,0)'); g.fillStyle=r; g.fillRect(0,0,1080,1920);
+function storyBg(g){ g.fillStyle='#0A0A0B'; g.fillRect(0,0,1080,1920); const sim=AIIMG.bull||AIIMG.bg; if(sim){ g.save(); g.globalAlpha=.42; cover(g,sim,0,0,1080,1920); g.restore(); const sg=g.createLinearGradient(0,0,0,1920); sg.addColorStop(0,'rgba(10,10,11,.55)'); sg.addColorStop(.3,'rgba(10,10,11,.75)'); sg.addColorStop(1,'rgba(10,10,11,.97)'); g.fillStyle=sg; g.fillRect(0,0,1080,1920); } const r=g.createRadialGradient(540,1500,40,540,1500,900); r.addColorStop(0,'rgba(255,106,19,.20)'); r.addColorStop(1,'rgba(255,106,19,0)'); g.fillStyle=r; g.fillRect(0,0,1080,1920);
   g.save(); g.strokeStyle='rgba(255,255,255,.035)'; g.lineWidth=1; for(let x=0;x<=1080;x+=60){ g.beginPath(); g.moveTo(x,0); g.lineTo(x,1920); g.stroke(); } for(let y=0;y<=1920;y+=60){ g.beginPath(); g.moveTo(0,y); g.lineTo(1080,y); g.stroke(); } g.restore(); }
 function storyFoot(g,txtLine){ g.fillStyle='rgba(255,255,255,.12)'; g.fillRect(140,1560,800,2); txt(g,txtLine,540,1592,fMed(20),'#77736E','center'); }
 function newStory(){ const c=document.createElement('canvas'); c.width=1080; c.height=1920; const g=c.getContext('2d'); storyBg(g); logo(g,540,355,280,false); return [c,g]; }
@@ -111,3 +112,21 @@ async function makeStories(){ await Promise.all(FONTS.map(f=>document.fonts.load
     list.forEach((s,k)=>out.push({name:`stories-${curDay}-${tag}-${pad2(k+1)}-${deAcc(s.name).split(' ')[0].toLowerCase()||'aluno'}.png`,cv:storyStudent(s,THEMES[curDay].label,dt)}));
     if(curDay==='qua'&&parcialOn()){ const pz=computeParcial(); await Promise.all(pz.list.map(async s=>{ s._a=await getImg(s.avatar,420); })); if(pz.list.length) out.splice(1,0,{name:`stories-parcial-seg-a-qua-${tag}.png`,cv:storyList('PARCIAL DA SEMANA',pz.range,pz.list.map(s=>({name:s.name,value:s.total,_a:s._a})),'TURMA SEG A QUA',pz.total)}); } }
   for(const o of out){ o.blob=await toBlob(o.cv); o.url=URL.createObjectURL(o.blob); delete o.cv; } return out; }
+
+/* ---------- imagens premium (OpenAI) — geradas uma vez e guardadas só neste aparelho ---------- */
+const AIIMG={}, AIURL={};
+const AI_PROMPTS={
+  bull:'Cinematic dark editorial photograph of a powerful charging bull, head and horns emerging from deep black shadows, intense orange rim light and glowing embers in the air, blurred orange stock-market candlestick chart lights in the background, luxury premium financial brand aesthetic, high contrast, dramatic, ultra detailed, vertical 9:16 composition with empty dark space at the top and bottom, no text, no letters, no logos, no watermark.',
+  bear:'Cinematic dark editorial photograph of a fierce roaring bear emerging from black shadows, cold smoky grey tones with subtle orange rim light, blurred falling candlestick chart lights in the background, tense stock-market crash mood, luxury premium financial brand aesthetic, high contrast, dramatic, ultra detailed, vertical 9:16 composition with empty dark space at the top and bottom, no text, no letters, no logos, no watermark.',
+  bg:'Abstract cinematic dark background of a trading floor at night, glowing orange candlestick charts and stock tickers reflected on black glass, bokeh, depth of field, luxury premium financial brand aesthetic, black and orange only, vertical 9:16, no text, no letters, no logos, no watermark.'
+};
+function aiBg(c,img,a,t){ if(!img||a<=0) return; c.save(); c.globalAlpha*=a; const z=1.06+.04*Math.sin((t||0)*.25); c.translate(540,960); c.scale(z,z); c.translate(-540,-960); cover(c,img,0,0,W,H); c.restore();
+  const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(7,7,8,.92)'); g.addColorStop(.22,'rgba(7,7,8,.35)'); g.addColorStop(.7,'rgba(7,7,8,.45)'); g.addColorStop(1,'rgba(7,7,8,.95)'); c.fillStyle=g; c.fillRect(0,0,W,H); }
+async function loadAI(){ for(const k of ['bull','bear','bg']){ try{ const b=await Store.getImg('ai:'+k); AIURL[k]=b?URL.createObjectURL(b):null; AIIMG[k]=b?await getImg(AIURL[k],1600):null; }catch(e){ AIIMG[k]=null; } } return AIIMG; }
+async function genAI(kind,key){ const prompt=AI_PROMPTS[kind]; const call=async body=>{ const r=await fetch('https://api.openai.com/v1/images/generations',{method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); if(!r.ok) throw Object.assign(new Error((j.error&&j.error.message)||('HTTP '+r.status)),{status:r.status}); return j; };
+  let j; try{ j=await call({model:'gpt-image-1',prompt,size:'1024x1536',quality:'high',n:1}); }
+  catch(e){ if(e.status===401) throw e; j=await call({model:'dall-e-3',prompt,size:'1024x1792',quality:'hd',response_format:'b64_json',n:1}); }
+  const b64=j.data&&j.data[0]&&j.data[0].b64_json; if(!b64) throw new Error('A OpenAI não devolveu a imagem.');
+  const bin=atob(b64), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); const blob=new Blob([u],{type:'image/png'});
+  await Store.putImg('ai:'+kind,blob); AIURL[kind]=URL.createObjectURL(blob); AIIMG[kind]=await getImg(AIURL[kind],1600); return blob; }
+async function delAI(kind){ try{ await Store.delImg('ai:'+kind); }catch(e){} AIIMG[kind]=null; AIURL[kind]=null; }

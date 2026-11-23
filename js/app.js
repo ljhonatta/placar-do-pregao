@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='5.2.0';
+const APP_VERSION='5.3.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -50,11 +50,18 @@ const toBlob=c=>new Promise(r=>c.toBlob(r,'image/jpeg',.9));
 const newKey=p=>p+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 async function takePrint(r,file){
   const day=curDay, e=entry(day,r.id);
-  let c; try{ status('Melhorando o print…'); c=await toCanvas(file,1800); await sleep(10); enhance(c); }catch(err){ status('Não consegui abrir essa imagem. Tente um print em JPG ou PNG.',true); return; }
+  let c, raw=null; try{ status('Melhorando o print…'); c=await toCanvas(file,1800); try{ raw=document.createElement('canvas'); raw.width=c.width; raw.height=c.height; raw.getContext('2d').drawImage(c,0,0); }catch(e2){ raw=null; } await sleep(10); enhance(c); }catch(err){ status('Não consegui abrir essa imagem. Tente um print em JPG ou PNG.',true); return; }
   const blob=await toBlob(c), key=newKey('p'); await Store.putImg(key,blob); urls.set(key,URL.createObjectURL(blob));
   const old=e.printKey; e.printKey=key; e.on=true; e.fx=.8; e.fy=.66; if(old) Store.delImg(old).catch(()=>{});
-  save(); renderList(); status('Agora toque no valor do Res. do Dia no print de '+r.name+'.',true);
+  save(); renderList();
   const row=document.querySelector(`[data-id="${r.id}"] .fbox`); if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
+  if(typeof ocrAuto!=='function'){ status('Agora toque no valor do Res. do Dia no print de '+r.name+'.',true); return; }
+  status('Lendo o valor no print de '+r.name+'…');
+  try{ let src=raw||c; try{ const u=URL.createObjectURL(file), im=new Image(); im.src=u; await im.decode(); src=im; setTimeout(()=>URL.revokeObjectURL(u),60000); }catch(e3){}
+    const rd=await ocrAuto(src); if(e.printKey!==key) return;
+    if(rd&&rd.value>0){ e.value=rd.value; e.fx=rd.fx; e.fy=rd.fy; e.on=true; save(); renderList(); preview(r.id); status('Valor lido no '+rd.src+' de '+r.name+': '+brl(rd.value)+'. Confira no campo. Se não for esse, toque no valor certo no print.'); }
+    else status('Não achei o Res. do Dia nesse print. Toque no valor dele no print de '+r.name+'.',true); }
+  catch(err){ status('Agora toque no valor do Res. do Dia no print de '+r.name+'.',true); }
 }
 async function takeAvatar(r,file){ let c; try{ c=await toCanvas(file,520); }catch(err){ status('Não consegui abrir essa foto.',true); return; }
   const blob=await toBlob(c), key=newKey('a'); await Store.putImg(key,blob); urls.set(key,URL.createObjectURL(blob)); const old=r.avatarKey; r.avatarKey=key; if(old) Store.delImg(old).catch(()=>{});
@@ -199,7 +206,8 @@ function renderList(){
     q('.val-in').addEventListener('input',ev=>{ e.value=parseBR(ev.target.value); if(e.value>0&&!e.on){ e.on=true; q('.on-in').checked=true; row.classList.add('on'); renderTabs(); } save(); });
     q('.val-in').addEventListener('change',ev=>{ ev.target.value=brlInput(e.value); preview(); });
     q('.on-in').addEventListener('change',ev=>{ e.on=ev.target.checked; row.classList.toggle('on',e.on); save(); renderTabs(); preview(); });
-    if(ps) q('.fbox img').addEventListener('click',ev=>{ const b=ev.currentTarget.getBoundingClientRect(); e.fx=clamp((ev.clientX-b.left)/b.width,0,1); e.fy=clamp((ev.clientY-b.top)/b.height,0,1); const m=q('.mark'); m.style.left=e.fx*100+'%'; m.style.top=e.fy*100+'%'; save(); status('Zoom marcado no print de '+r.name+'.'); preview(r.id); });
+    if(ps) q('.fbox img').addEventListener('click',ev=>{ const b=ev.currentTarget.getBoundingClientRect(); e.fx=clamp((ev.clientX-b.left)/b.width,0,1); e.fy=clamp((ev.clientY-b.top)/b.height,0,1); const m=q('.mark'); m.style.left=e.fx*100+'%'; m.style.top=e.fy*100+'%'; save(); status('Zoom marcado. Lendo o valor…'); preview(r.id);
+      const im=ev.currentTarget, pk=e.printKey; if(typeof ocrAt==='function') ocrAt(im,e.fx,e.fy).then(rd=>{ if(e.printKey!==pk) return; if(rd&&rd.value>0){ e.value=rd.value; e.on=true; const vi=document.querySelector(`[data-id="${r.id}"] .val-in`); if(vi) vi.value=brlInput(e.value); save(); renderTabs(); preview(r.id); status('Valor lido no print de '+r.name+': '+brl(rd.value)+'. Confira no campo.'); } else status('Zoom marcado no print de '+r.name+'. Não consegui ler o número aqui; digite o valor.',true); }).catch(()=>status('Zoom marcado no print de '+r.name+'.')); });
     q('.fp').addEventListener('change',ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(f) takePrint(r,f); });
     q('.fa').addEventListener('change',ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(f) takeAvatar(r,f); });
     let armed=0; q('.rm').addEventListener('click',ev=>{ if(Date.now()-armed>3500){ armed=Date.now(); ev.target.textContent='Toque de novo pra remover'; return; } roster.splice(roster.indexOf(r),1); save(); renderList(); preview(); });
@@ -225,6 +233,17 @@ function mktSave(){ const d=days[curDay]&&days[curDay].date; if(!d) return; cons
   $('mktState').textContent=(m.head||m.ibov||m.usd)?'(ligada neste dia)':'(opcional)'; clearTimeout(mktTimer); mktTimer=setTimeout(()=>{ Store.set('market',MARKET).catch(()=>{}); preview(); },700); }
 ['mHead','mIbov','mUsd'].forEach(id=>$(id).addEventListener('input',mktSave));
 $('mClear').onclick=()=>{ $('mHead').value=''; $('mIbov').value=''; $('mUsd').value=''; mktSave(); };
+/* imagens premium (OpenAI) */
+try{ $('aiKey').value=localStorage.getItem('placar:openai')||''; }catch(e){}
+$('aiKey').addEventListener('change',()=>{ try{ localStorage.setItem('placar:openai',$('aiKey').value.trim()); }catch(e){} });
+function aiThumbs(){ let n=0; ['bull','bear','bg'].forEach(k=>{ const im=$('aiImg-'+k), b=document.querySelector(`.aiDel[data-k="${k}"]`); if(AIIMG[k]){ n++; im.src=AIURL[k]||''; b.hidden=false; } else { im.removeAttribute('src'); b.hidden=true; } }); $('aiState').textContent=n?'('+n+' de 3 prontas)':'(opcional)'; }
+document.querySelectorAll('.aiGen').forEach(bt=>bt.onclick=async()=>{ const key=$('aiKey').value.trim(); if(!key){ status('Cole a chave da API da OpenAI no campo, aqui no app.',true); $('aiKey').focus(); return; }
+  try{ localStorage.setItem('placar:openai',key); }catch(e){} const k=bt.dataset.k, old=bt.textContent; document.querySelectorAll('.aiGen').forEach(b=>b.disabled=true); bt.textContent='Gerando… (até 1 min)'; status('Gerando a imagem na OpenAI…');
+  try{ await genAI(k,key); aiThumbs(); status('Imagem pronta e salva neste aparelho. Ela já entra no vídeo e nos stories.'); preview(); }
+  catch(e){ status(e.status===401?'A OpenAI recusou a chave (inválida ou sem saldo). Confira a chave.':'A OpenAI não gerou a imagem: '+e.message,true); }
+  finally{ bt.textContent=old; document.querySelectorAll('.aiGen').forEach(b=>b.disabled=false); } });
+document.querySelectorAll('.aiDel').forEach(bt=>bt.onclick=async()=>{ await delAI(bt.dataset.k); aiThumbs(); preview(); });
+loadAI().then(()=>{ aiThumbs(); if(loaded&&(AIIMG.bull||AIIMG.bear||AIIMG.bg)) preview(); }).catch(()=>{});
 /* stories */
 let lastStories=[];
 $('stories').onclick=async()=>{ if(busy) return; status('Montando os stories…'); $('storiesBox').hidden=true; try{ lastStories.forEach(s=>URL.revokeObjectURL(s.url)); lastStories=await makeStories(); }catch(e){ lastStories=[]; }
