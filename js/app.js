@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='5.3.0';
+const APP_VERSION='5.3.1';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -55,13 +55,13 @@ async function takePrint(r,file){
   const old=e.printKey; e.printKey=key; e.on=true; e.fx=.8; e.fy=.66; if(old) Store.delImg(old).catch(()=>{});
   save(); renderList();
   const row=document.querySelector(`[data-id="${r.id}"] .fbox`); if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
-  if(typeof ocrAuto!=='function'){ status('Agora toque no valor do Res. do Dia no print de '+r.name+'.',true); return; }
+  if(typeof readPrint!=='function'){ status('Agora toque no valor do Res. do Dia no print de '+r.name+'.',true); return; }
   status('Lendo o valor no print de '+r.name+'…');
   try{ let src=raw||c; try{ const u=URL.createObjectURL(file), im=new Image(); im.src=u; await im.decode(); src=im; setTimeout(()=>URL.revokeObjectURL(u),60000); }catch(e3){}
-    const rd=await ocrAuto(src); if(e.printKey!==key) return;
-    if(rd&&rd.value>0){ e.value=rd.value; e.fx=rd.fx; e.fy=rd.fy; e.on=true; save(); renderList(); preview(r.id); status('Valor lido no '+rd.src+' de '+r.name+': '+brl(rd.value)+'. Confira no campo. Se não for esse, toque no valor certo no print.'); }
+    const rd=await readPrint(src,m=>status(m)); if(e.printKey!==key) return;
+    if(rd&&rd.value>0){ e.value=rd.value; if(rd.fx!=null){ e.fx=rd.fx; e.fy=rd.fy; } e.on=true; save(); renderList(); preview(r.id); status('Valor lido no '+rd.src+' de '+r.name+': '+brl(rd.value)+'. Confira no campo. Se não for esse, toque no valor certo no print.'); }
     else status('Não achei o Res. do Dia nesse print. Toque no valor dele no print de '+r.name+'.',true); }
-  catch(err){ status('Agora toque no valor do Res. do Dia no print de '+r.name+'.',true); }
+  catch(err){ status('Não consegui ler o print de '+r.name+' ('+(err&&err.message||err)+'). Toque no valor no print ou digite.',true); }
 }
 async function takeAvatar(r,file){ let c; try{ c=await toCanvas(file,520); }catch(err){ status('Não consegui abrir essa foto.',true); return; }
   const blob=await toBlob(c), key=newKey('a'); await Store.putImg(key,blob); urls.set(key,URL.createObjectURL(blob)); const old=r.avatarKey; r.avatarKey=key; if(old) Store.delImg(old).catch(()=>{});
@@ -196,7 +196,7 @@ function renderList(){
     row.innerHTML=`<div class="head"><img class="thumb" alt="" ${av?'':'hidden'}><div class="id"><input type="text" class="nm-in" aria-label="Nome do aluno" autocomplete="off"><input type="text" class="hd-in" aria-label="Instagram" placeholder="@instagram" autocomplete="off" autocapitalize="off"></div><label class="chk"><input type="checkbox" class="on-in" ${e.on?'checked':''}> Operou hoje</label></div>
       <div class="field"><label for="v-${r.id}">Resultado do dia (R$)</label><input type="text" class="val-in" inputmode="decimal" id="v-${r.id}" placeholder="0,00" autocomplete="off"></div>
       <div class="files"><label class="btn${ps?'':' need'}">${ps?'✓ Trocar print':'Enviar print'}<input type="file" accept="image/*" class="fp" hidden></label><label class="btn">${r.avatarKey||r.avatar?'Trocar foto':'Enviar foto'}<input type="file" accept="image/*" class="fa" hidden></label><button type="button" class="rm">Remover da turma</button></div>
-      ${ps?`<div class="focus"><span class="flab">Toque no valor do <b>Res. do Dia</b> pra marcar o zoom</span><div class="fbox"><img alt="Print de ${esc(r.name)}: toque no resultado"><span class="mark" style="left:${e.fx*100}%;top:${e.fy*100}%"></span></div></div>`:''}`;
+      ${ps?`<div class="focus"><span class="flab">Toque no valor do <b>Res. do Dia</b> pra marcar o zoom e ler o número · <button type="button" class="link readv">Ler valor do print</button></span><div class="fbox"><img alt="Print de ${esc(r.name)}: toque no resultado"><span class="mark" style="left:${e.fx*100}%;top:${e.fy*100}%"></span></div></div>`:''}`;
     L.appendChild(row);
     const q=s=>row.querySelector(s);
     if(av) q('.thumb').src=av; if(ps) q('.fbox img').src=ps;
@@ -206,6 +206,9 @@ function renderList(){
     q('.val-in').addEventListener('input',ev=>{ e.value=parseBR(ev.target.value); if(e.value>0&&!e.on){ e.on=true; q('.on-in').checked=true; row.classList.add('on'); renderTabs(); } save(); });
     q('.val-in').addEventListener('change',ev=>{ ev.target.value=brlInput(e.value); preview(); });
     q('.on-in').addEventListener('change',ev=>{ e.on=ev.target.checked; row.classList.toggle('on',e.on); save(); renderTabs(); preview(); });
+    if(ps) q('.readv').addEventListener('click',async()=>{ const im=q('.fbox img'), pk=e.printKey; status('Lendo o valor no print de '+r.name+'…'); try{ if(!im.complete) await im.decode(); const rd=await readPrint(im,m=>status(m)); if(e.printKey!==pk) return;
+      if(rd&&rd.value>0){ e.value=rd.value; if(rd.fx!=null){ e.fx=rd.fx; e.fy=rd.fy; } e.on=true; save(); renderList(); preview(r.id); status('Valor lido no '+rd.src+' de '+r.name+': '+brl(rd.value)+'. Confira no campo.'); }
+      else status('Não achei o valor nesse print. Toque no número do Res. do Dia ou digite.',true); }catch(err){ status('Não consegui ler o print ('+(err&&err.message||err)+'). Toque no número ou digite.',true); } });
     if(ps) q('.fbox img').addEventListener('click',ev=>{ const b=ev.currentTarget.getBoundingClientRect(); e.fx=clamp((ev.clientX-b.left)/b.width,0,1); e.fy=clamp((ev.clientY-b.top)/b.height,0,1); const m=q('.mark'); m.style.left=e.fx*100+'%'; m.style.top=e.fy*100+'%'; save(); status('Zoom marcado. Lendo o valor…'); preview(r.id);
       const im=ev.currentTarget, pk=e.printKey; if(typeof ocrAt==='function') ocrAt(im,e.fx,e.fy).then(rd=>{ if(e.printKey!==pk) return; if(rd&&rd.value>0){ e.value=rd.value; e.on=true; const vi=document.querySelector(`[data-id="${r.id}"] .val-in`); if(vi) vi.value=brlInput(e.value); save(); renderTabs(); preview(r.id); status('Valor lido no print de '+r.name+': '+brl(rd.value)+'. Confira no campo.'); } else status('Zoom marcado no print de '+r.name+'. Não consegui ler o número aqui; digite o valor.',true); }).catch(()=>status('Zoom marcado no print de '+r.name+'.')); });
     q('.fp').addEventListener('change',ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(f) takePrint(r,f); });
