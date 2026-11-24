@@ -58,3 +58,9 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 ## v5.3 · Leitura automática do print e imagens premium
 - **Valor automático:** ao anexar o print, o app lê o "Res. do Dia" (ou o "Res. Aberto", se o dia estiver zerado), preenche o valor e marca o zoom em cima dele. Tocando em outro número do print, ele lê esse número. A leitura roda no próprio aparelho (Tesseract.js em `vendor/ocr`, licença Apache-2.0); a imagem não sai do celular.
 - **Imagens premium (OpenAI):** com a chave da API colada no app (fica só no aparelho), gera o touro, o urso e o fundo de pregão em preto e laranja. Elas entram na abertura do pregão, no painel de cotações, nas capas 3D e no fundo dos stories.
+
+
+## v5.3.2
+- Remover aluno agora pede confirmação.
+- Lista "Alunos removidos": resultados de quem saiu da turma ficam guardados e dá para restaurar com um toque.
+- Restauração automática do Marcos Biroh Biroh (removido sem querer), com os resultados salvos.

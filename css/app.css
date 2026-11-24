@@ -143,3 +143,7 @@ button:disabled{opacity:.4;cursor:default}
 .aigrid img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:10px;background:#141418;border:1px solid rgba(255,255,255,.12)}
 .aigrid img:not([src]){visibility:hidden}
 .aigrid figcaption{font-size:13px;color:var(--muted)}
+
+.removed{margin-top:12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;padding:10px 14px}
+.removed ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.removed li{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted)}

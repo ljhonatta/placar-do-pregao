@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='5.3.1';
+const APP_VERSION='5.3.2';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -213,7 +213,7 @@ function renderList(){
       const im=ev.currentTarget, pk=e.printKey; if(typeof ocrAt==='function') ocrAt(im,e.fx,e.fy).then(rd=>{ if(e.printKey!==pk) return; if(rd&&rd.value>0){ e.value=rd.value; e.on=true; const vi=document.querySelector(`[data-id="${r.id}"] .val-in`); if(vi) vi.value=brlInput(e.value); save(); renderTabs(); preview(r.id); status('Valor lido no print de '+r.name+': '+brl(rd.value)+'. Confira no campo.'); } else status('Zoom marcado no print de '+r.name+'. Não consegui ler o número aqui; digite o valor.',true); }).catch(()=>status('Zoom marcado no print de '+r.name+'.')); });
     q('.fp').addEventListener('change',ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(f) takePrint(r,f); });
     q('.fa').addEventListener('change',ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(f) takeAvatar(r,f); });
-    let armed=0; q('.rm').addEventListener('click',ev=>{ if(Date.now()-armed>3500){ armed=Date.now(); ev.target.textContent='Toque de novo pra remover'; return; } roster.splice(roster.indexOf(r),1); save(); renderList(); preview(); });
+    q('.rm').addEventListener('click',()=>{ if(!confirm('Remover '+r.name+' da turma?\n\nOs resultados dele continuam guardados e dá para restaurar depois em "Alunos removidos".')) return; roster.splice(roster.indexOf(r),1); save(); renderList(); renderRemoved(); preview(); status(r.name+' removido. Para desfazer, use "Restaurar" em Alunos removidos.'); });
   });
 }
 let armedClear=0;
@@ -236,6 +236,16 @@ function mktSave(){ const d=days[curDay]&&days[curDay].date; if(!d) return; cons
   $('mktState').textContent=(m.head||m.ibov||m.usd)?'(ligada neste dia)':'(opcional)'; clearTimeout(mktTimer); mktTimer=setTimeout(()=>{ Store.set('market',MARKET).catch(()=>{}); preview(); },700); }
 ['mHead','mIbov','mUsd'].forEach(id=>$(id).addEventListener('input',mktSave));
 $('mClear').onclick=()=>{ $('mHead').value=''; $('mIbov').value=''; $('mUsd').value=''; mktSave(); };
+/* alunos removidos: os resultados continuam guardados pelo id; dá para restaurar */
+function orphanIds(){ const ids=new Set(roster.map(r=>r.id)), o={}; for(const d in results) for(const id in results[d]){ if(ids.has(id)) continue; const e=results[d][id]; if(e&&(e.on||e.value||e.printKey)){ o[id]=o[id]||{n:0,last:d}; o[id].n++; if(d>o[id].last) o[id].last=d; } } return o; }
+async function orphanAvatars(){ try{ const used=new Set(roster.map(r=>r.avatarKey).filter(Boolean)); return (await Store.imgKeys()).filter(k=>/^a-/.test(k)&&!used.has(k)); }catch(e){ return []; } }
+async function autoRestoreMarcos(){ try{ if(localStorage.getItem('placar:fixMarcos')==='1') return; if(roster.some(r=>/marcos/i.test(r.name))){ localStorage.setItem('placar:fixMarcos','1'); return; }
+    const o=orphanIds(), ids=Object.keys(o).filter(id=>/^u/.test(id)).sort((x,y)=>o[y].last.localeCompare(o[x].last)||o[y].n-o[x].n); if(!ids.length) return;
+    const av=await orphanAvatars(); roster.push({id:ids[0],name:'Marcos Biroh Biroh',handle:'@',avatar:null,avatarKey:av.length===1?av[0]:null}); localStorage.setItem('placar:fixMarcos','1'); save();
+    setTimeout(()=>status('Marcos Biroh Biroh foi restaurado com os resultados dele. Confira o @ e a foto.'),1500); }catch(e){} }
+function renderRemoved(){ const box=$('removed'); if(!box) return; const o=orphanIds(), ids=Object.keys(o); box.hidden=!ids.length; if(!ids.length) return;
+  box.querySelector('ul').innerHTML=ids.map(id=>`<li><span>Aluno removido · ${o[id].n} ${o[id].n>1?'resultados':'resultado'} (último em ${o[id].last.split('-').reverse().join('/')})</span><button type="button" data-id="${id}">Restaurar</button></li>`).join('');
+  box.querySelectorAll('button[data-id]').forEach(b=>b.onclick=async()=>{ const nm=prompt('Nome do aluno a restaurar:',''); if(!nm) return; const av=await orphanAvatars(); roster.push({id:b.dataset.id,name:nm.trim(),handle:'@',avatar:null,avatarKey:av.length===1?av[0]:null}); save(); renderList(); renderRemoved(); preview(); status(nm.trim()+' restaurado com os resultados.'); }); }
 /* imagens premium (OpenAI) */
 try{ $('aiKey').value=localStorage.getItem('placar:openai')||''; }catch(e){}
 $('aiKey').addEventListener('change',()=>{ try{ localStorage.setItem('placar:openai',$('aiKey').value.trim()); }catch(e){} });
@@ -324,5 +334,6 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
     if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
     setSaved('Salvo neste aparelho ✓');
   }catch(e){ setSaved('Sem salvamento neste modo',true); }
-  loaded=true; buildWeek(); await preloadUrls(); renderAll(); preview();
+  await autoRestoreMarcos();
+  loaded=true; buildWeek(); await preloadUrls(); renderAll(); renderRemoved(); preview();
 })();
