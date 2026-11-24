@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='5.4.0';
+const APP_VERSION='5.5.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -153,17 +153,23 @@ async function record(){
   busy=true; exporting=true; loopId++; setRes(1); LOCK.forEach(b=>$(b).disabled=true); document.querySelectorAll('.tabs button').forEach(b=>b.disabled=true);
   const D=dur(), prog=p=>{ $('prog').style.width=Math.round(p*100)+'%'; status('Gerando vídeo… '+Math.round(p*100)+'% · deixe esta tela aberta'); };
   try{
-    let blob=null, ext='mp4';
-    const fast=window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer; lastAudio=false; lastWav=null;
-    if(fast){ try{ blob=await encodeMP4(D,prog,false); }catch(e){ blob=null; } }
+    let blob=null, ext='mp4', withSound=false; const wantAudio=sfxOn()&&(typeof SFX!=='undefined');
+    const fast=window.VideoEncoder&&window.VideoFrame&&window.Mp4Muxer; lastAudio=false; lastWav=null; audioWhy='';
+    const tryAAC=fast&&wantAudio&&await aacOK();
+    if(fast){ try{ blob=await encodeMP4(D,prog,tryAAC); }catch(e){ blob=null; } if(!blob&&tryAAC){ try{ blob=await encodeMP4(D,prog,false); }catch(e){ blob=null; } } }
     if(!blob){ if(!window.MediaRecorder||!cv.captureStream) throw new Error('none'); status('Gravando em tempo real… deixe esta tela aberta.'); const r=await recordRealtime(D,prog); blob=r.blob; ext=r.ext; }
-    const name=`resultado-${MODE==='week'?'semana':MODE==='parcial'?'parcial-seg-a-qua':THEMES[curDay].label.toLowerCase().replace('ç','c')}-${days[curDay].date.replace(/\//g,'-')}.${ext}`;
-    lastVideo={blob,name}; $('readyName').textContent='Vídeo pronto: '+name+' ('+(blob.size/1048576).toFixed(1)+' MB)';
-    if(sfxOn()&&(typeof SFX!=='undefined')){ status('Gerando o áudio dos efeitos…'); try{ const buf=await SFX.render(cueList(),D,sfxDay(),musicOpts()); if(buf){ lastWav={blob:SFX.wav(buf),name:name.replace(/\.(mp4|webm)$/,'')+'-efeitos.wav'}; } }catch(e){ lastWav=null; } }
+    const name0=`resultado-${MODE==='week'?'semana':MODE==='parcial'?'parcial-seg-a-qua':THEMES[curDay].label.toLowerCase().replace('ç','c')}-${days[curDay].date.replace(/\//g,'-')}`;
+    let wav=null;
+    if(wantAudio){ status('Gerando a música e os efeitos…'); try{ const buf=await SFX.render(cueList(),D,sfxDay(),musicOpts()); if(buf) wav=SFX.wav(buf); }catch(e){ wav=null; } }
+    if(wav&&lastAudio){ status('Conferindo o som do vídeo…'); if(await verifyAudio(blob)==='ok') withSound=true; }
+    if(wav&&!withSound&&typeof muxAV==='function'){ try{ const m=await muxAV(blob,wav,s=>status(s)); if(m){ blob=m; ext='mp4'; withSound=true; } }catch(e){ audioWhy=e&&e.message||String(e); } }
+    const name=name0+'.'+ext;
+    lastWav=(wav&&!withSound)?{blob:wav,name:name0+'-efeitos.wav'}:null;
+    lastVideo={blob,name}; $('readyName').textContent=(withSound?'Vídeo pronto com música e efeitos: ':'Vídeo pronto: ')+name+' ('+(blob.size/1048576).toFixed(1)+' MB)';
     $('audioRow').hidden=!lastWav; if(lastWav) $('readyAudio').textContent='Áudio dos efeitos: '+lastWav.name+' ('+(lastWav.blob.size/1048576).toFixed(1)+' MB)';
     $('shareA').hidden=!(lastWav&&navigator.canShare&&navigator.canShare({files:[new File([lastWav.blob],lastWav.name,{type:'audio/wav'})]}));
     const file=new File([blob],name,{type:blob.type}); $('share').hidden=!(navigator.canShare&&navigator.canShare({files:[file]}));
-    $('ready').hidden=false; status(lastWav?'Pronto: baixe o vídeo e depois o áudio dos efeitos.':'Vídeo pronto. Toque em baixar.'); $('ready').scrollIntoView({block:'nearest',behavior:'smooth'});
+    $('ready').hidden=false; status(withSound?'Vídeo pronto com música e efeitos sincronizados. Toque em baixar.':lastWav?'Pronto: baixe o vídeo e depois o áudio dos efeitos'+(audioWhy?' (não deu pra juntar: '+audioWhy+')':'')+'.':'Vídeo pronto. Toque em baixar.'); $('ready').scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(e){ status('Este navegador não conseguiu gerar o vídeo. Use o Chrome ou o Safari atualizado.',true); }
   finally{ busy=false; exporting=false; setRes(.5); draw(dur()); LOCK.forEach(b=>$(b).disabled=false); document.querySelectorAll('.tabs button').forEach(b=>b.disabled=false); $('prog').style.width='100%'; }
 }
@@ -182,7 +188,7 @@ function renderTabs(){ const T=$('tabs'); T.innerHTML=''; const tk=todayInfo().k
     const has=d!=='sab'&&Object.values(days[d].entries).some(e=>e.on);
     b.innerHTML=`${THEMES[d].tab}<small>${days[d].key===tk?'HOJE':shortDate(days[d].date)}</small>${has?'<i class="dot"></i>':''}`;
     b.onclick=()=>{ if(busy) return; curDay=d; renderAll(); preview(); }; T.appendChild(b); }); }
-function renderAll(){ renderWeekNav(); renderTabs(); if(typeof mktFill==='function'&&$('mHead')) mktFill(); const wk=curDay==='sab'; $('dayPanel').hidden=wk; $('weekPanel').hidden=!wk;
+function renderAll(){ renderWeekNav(); renderTabs(); if(typeof mktFill==='function'&&$('mHead')) mktFill(); if(typeof newsFill==='function') newsFill(); const wk=curDay==='sab'; $('dayPanel').hidden=wk; $('weekPanel').hidden=!wk;
   $('panelTitle').textContent=wk?'Resultado da semana':(THEMES[curDay].label.charAt(0)+THEMES[curDay].label.slice(1).toLowerCase()+' · '+days[curDay].date);
   if(wk) renderWeek(); else renderList(); }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -235,10 +241,30 @@ $('board').onchange=()=>{ try{ localStorage.setItem('placar:board',$('board').ch
 /* abertura do pregão: manchete e variações do dia (chave própria, não mexe nos resultados) */
 let mktTimer=0;
 function mktFill(){ const d=days[curDay]&&days[curDay].date, m=(d&&MARKET[d])||{}; $('mHead').value=m.head||''; $('mIbov').value=m.ibov||''; $('mUsd').value=m.usd||''; $('mktState').textContent=(m.head||m.ibov||m.usd)?'(ligada neste dia)':'(opcional)'; }
-function mktSave(){ const d=days[curDay]&&days[curDay].date; if(!d) return; const m={head:$('mHead').value.trim(),ibov:$('mIbov').value.trim(),usd:$('mUsd').value.trim()}; if(m.head||m.ibov||m.usd) MARKET[d]=m; else delete MARKET[d];
+function mktSave(){ const d=days[curDay]&&days[curDay].date; if(!d) return; const old=MARKET[d]||{}, m={head:$('mHead').value.trim(),ibov:$('mIbov').value.trim(),usd:$('mUsd').value.trim()}; if(old.news) m.news=old.news; if(old.tape) m.tape=old.tape; if(m.head||m.ibov||m.usd||(m.news&&m.news.length)) MARKET[d]=m; else delete MARKET[d];
   $('mktState').textContent=(m.head||m.ibov||m.usd)?'(ligada neste dia)':'(opcional)'; clearTimeout(mktTimer); mktTimer=setTimeout(()=>{ Store.set('market',MARKET).catch(()=>{}); preview(); },700); }
 ['mHead','mIbov','mUsd'].forEach(id=>$(id).addEventListener('input',mktSave));
-$('mClear').onclick=()=>{ $('mHead').value=''; $('mIbov').value=''; $('mUsd').value=''; mktSave(); };
+$('mClear').onclick=()=>{ $('mHead').value=''; $('mIbov').value=''; $('mUsd').value=''; const d=days[curDay]&&days[curDay].date; if(d&&MARKET[d]){ delete MARKET[d].news; delete MARKET[d].tape; } RADAR_PICKS=null; mktSave(); newsFill(); };
+/* ---------- informativo do Radar Trader ---------- */
+let RADAR_PICKS=null;
+function mktKeep(){ const d=days[curDay]&&days[curDay].date; if(!d) return null; MARKET[d]=MARKET[d]||{}; return MARKET[d]; }
+function mktStore(){ clearTimeout(mktTimer); mktTimer=setTimeout(()=>{ Store.set('market',MARKET).catch(()=>{}); preview(); },500); }
+function newsFill(){ const ul=$('newsPick'); if(!ul) return; const cur=newsOf().list, sel=new Set(cur.map(n=>n.t)), pool=(RADAR_PICKS&&RADAR_PICKS.day===curDay?RADAR_PICKS.list:[]).slice(); cur.forEach(n=>{ if(!pool.some(p=>p.t===n.t)) pool.unshift(n); });
+  ul.innerHTML=''; pool.forEach(n=>{ const li=document.createElement('li'); li.innerHTML=`<label><input type="checkbox"${sel.has(n.t)?' checked':''}><span><b>${esc(n.cat||'Mercado')}${n.imp==='alto'?' · impacto alto':''}</b>${esc(n.t)}</span></label>`;
+    li.querySelector('input').addEventListener('change',ev=>{ const m=mktKeep(); if(!m) return; let L=Array.isArray(m.news)?m.news.filter(x=>x&&x.t):[];
+      if(ev.target.checked){ if(L.length>=3){ ev.target.checked=false; status('Escolha no máximo 3 notícias.',true); return; } L.push({t:n.t,cat:n.cat,imp:n.imp}); } else L=L.filter(x=>x.t!==n.t);
+      m.news=L; $('mktState').textContent='(ligada neste dia)'; mktStore(); }); ul.appendChild(li); });
+  $('newsPick').hidden=!pool.length; }
+$('radarGet').onclick=async()=>{ const day=curDay, key=days[day]&&days[day].key; if(!key) return; const btn=$('radarGet'); btn.disabled=true; status('Puxando as notícias do Radar Trader…');
+  try{ const {list,meta}=await fetchRadar(); const span=day==='sab'?6:(day==='qua'&&typeof parcialOn==='function'&&parcialOn())?2:0, picks=radarPick(list,key,span); if(day!==curDay) return;
+    RADAR_PICKS={day,list:picks}; const m=mktKeep(); if(!m) return; const tp=radarTape(meta,key); if(tp&&tp.length) m.tape=tp;
+    if(!(Array.isArray(m.news)&&m.news.length)) m.news=picks.slice(0,3).map(n=>({t:n.t,cat:n.cat,imp:n.imp}));
+    if(!$('mIbov').value){ const v=radarPct(meta,key,'IBOV'); if(v){ $('mIbov').value=v; m.ibov=v; } } if(!$('mUsd').value){ const v=radarPct(meta,key,'USD'); if(v){ $('mUsd').value=v; m.usd=v; } }
+    $('mktState').textContent='(ligada neste dia)'; newsFill(); mktStore(); status(picks.length?picks.length+' notícias do Radar. As 3 mais fortes já estão marcadas; troque se quiser.':'O Radar não tem notícias para esse dia.',!picks.length); }
+  catch(e){ status('Não consegui puxar o Radar ('+(e&&e.message||e)+'). Confira a internet e tente de novo.',true); }
+  finally{ btn.disabled=false; } };
+try{ const v=localStorage.getItem('placar:newsOn'); if(v!=null) $('newsOn').checked=v==='1'; }catch(e){}
+$('newsOn').addEventListener('change',()=>{ try{ localStorage.setItem('placar:newsOn',$('newsOn').checked?'1':'0'); }catch(e){} preview(); });
 /* alunos removidos: os resultados continuam guardados pelo id; dá para restaurar */
 function orphanIds(){ const ids=new Set(roster.map(r=>r.id)), o={}; for(const d in results) for(const id in results[d]){ if(ids.has(id)) continue; const e=results[d][id]; if(e&&(e.on||e.value||e.printKey)){ o[id]=o[id]||{n:0,last:d}; o[id].n++; if(d>o[id].last) o[id].last=d; } } return o; }
 async function orphanAvatars(){ try{ const used=new Set(roster.map(r=>r.avatarKey).filter(Boolean)); return (await Store.imgKeys()).filter(k=>/^a-/.test(k)&&!used.has(k)); }catch(e){ return []; } }
@@ -276,13 +302,13 @@ function applyAudioMode(m){ const ok=['music','track','trackOnly','sfx','none'];
   document.querySelectorAll('input[name=amode]').forEach(r=>r.checked=r.value===audioMode); const vol=audioMode==='music'||audioMode==='track'||audioMode==='trackOnly'; $('musicVol').disabled=!vol; $('musicSeed').disabled=audioMode!=='music'; $('musicVolLbl').classList.toggle('off',!vol);
   document.querySelectorAll('.needTrack').forEach(el=>el.classList.toggle('off',!TRACK)); document.querySelectorAll('input.needTrack').forEach(el=>el.disabled=!TRACK); }
 document.querySelectorAll('input[name=amode]').forEach(r=>r.onchange=()=>{ if(!r.checked) return; applyAudioMode(r.value); stopSound(); Store.set('audioMode',audioMode).catch(()=>{}); preview(); });
-function trackInfo(){ $('trackName').textContent=TRACK?(TRACK.name.replace(/\.[a-z0-9]+$/i,'')+' · '+Math.round(TRACK.bpm)+' BPM · '+Math.round(TRACK.dur)+' s'):'nenhuma enviada'; $('trackDel').hidden=!TRACK; }
+function trackInfo(){ $('trackName').textContent=TRACK?(TRACK.name.replace(/\.[a-z0-9]+$/i,'')+' · '+Math.round(TRACK.bpm)+' BPM · '+Math.round(TRACK.dur)+' s'):'nenhuma enviada'; $('trackDel').hidden=!TRACK||!!TRACK.isDefault; }
 $('trackIn').onchange=async ev=>{ const f=ev.target.files[0]; ev.target.value=''; if(!f) return; status('Analisando a batida da música…');
   try{ await setTrack(f); trackInfo(); applyAudioMode('track'); Store.set('audioMode','track').catch(()=>{}); stopSound(); await preview(); status('Trilha salva neste aparelho: '+Math.round(TRACK.bpm)+' BPM. Os cortes agora caem na batida dela.'); }
   catch(e){ status('Não consegui ler esse arquivo de áudio. Envie MP3, M4A ou WAV.',true); } };
-$('trackDel').onclick=async()=>{ await clearTrack(); trackInfo(); applyAudioMode('music'); Store.set('audioMode','music').catch(()=>{}); stopSound(); preview(); status('Trilha removida deste aparelho.'); };
+$('trackDel').onclick=async()=>{ await clearTrack(); trackInfo(); applyAudioMode(TRACK?'track':'music'); Store.set('audioMode',audioMode).catch(()=>{}); stopSound(); preview(); status(TRACK?'Voltou para a trilha padrão da Trader School.':'Trilha removida deste aparelho.'); };
 applyAudioMode('music'); trackInfo();
-(async()=>{ await loadTrackFromStore(); trackInfo(); let m=null; try{ m=await Store.get('audioMode'); }catch(e){} applyAudioMode(m||(TRACK?'track':'music')); if(TRACK&&loaded) preview(); })();
+(async()=>{ await loadTrackFromStore(); trackInfo(); let m=null; try{ m=await Store.get('audioMode'); }catch(e){} let first=false; try{ first=!localStorage.getItem('placar:trilhaPadrao'); localStorage.setItem('placar:trilhaPadrao','1'); }catch(e){} if(first&&TRACK) m='track'; applyAudioMode(m||(TRACK?'track':'music')); if(first&&TRACK) Store.set('audioMode',audioMode).catch(()=>{}); if(TRACK&&loaded) preview(); })();
 $('musicVol').oninput=()=>{ try{ localStorage.setItem('placar:musicVol',$('musicVol').value); }catch(e){} };
 $('musicSeed').onclick=()=>{ musicSeed=(musicSeed+1)%97; try{ localStorage.setItem('placar:musicSeed',musicSeed); }catch(e){} status('Trilha: variação '+(musicSeed+1)+'. Toque em "Tocar prévia" para ouvir.'); };
 

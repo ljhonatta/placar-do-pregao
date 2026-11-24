@@ -150,3 +150,9 @@ button:disabled{opacity:.4;cursor:default}
 
 .ocrmsg{margin:0;font-size:15px;font-weight:600;line-height:1.35;padding:10px 12px;border-radius:8px;background:rgba(255,106,19,.12);border:1px solid rgba(255,106,19,.35);color:var(--paper)}
 .ocrmsg.warn{background:rgba(255,106,19,.2);color:var(--accent)}
+.radar{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.radarRow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.newsPick{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.newsPick label{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:15px;line-height:1.35}
+.newsPick input{margin-top:3px;accent-color:var(--accent);width:20px;height:20px;flex:none}
+.newsPick b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}

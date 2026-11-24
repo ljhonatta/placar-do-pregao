@@ -1,0 +1,2 @@
+ffmpeg.wasm 0.12 (@ffmpeg/ffmpeg 0.12.15 e @ffmpeg/core 0.12.6), licença MIT do pacote; o núcleo inclui o FFmpeg (LGPL/GPL). https://github.com/ffmpegwasm/ffmpeg.wasm
+ffmpeg-core.wasm.gz é o ffmpeg-core.wasm original comprimido com gzip; o app descomprime no navegador.

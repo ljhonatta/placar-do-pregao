@@ -69,3 +69,8 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - Leitura do print reforçada para o celular: com a chave da OpenAI salva no app, a IA lê primeiro (cerca de 1 s); sem chave ou se a IA falhar, o leitor do aparelho assume.
 - Tempo limite em cada etapa: o leitor não fica mais travado em silêncio.
 - A mensagem da leitura aparece na própria linha do aluno, embaixo do print, com progresso e o motivo de qualquer falha.
+
+## v5.5.0
+- O vídeo sai num MP4 só, com a trilha e os efeitos sincronizados. Quando o navegador não grava o som direto (iPhone), o app junta vídeo e áudio no próprio aparelho com o ffmpeg.wasm (baixado uma vez, ~10 MB).
+- Trilha padrão da Trader School embutida (assets/trilha-padrao.mp3), ativa por padrão em todos os aparelhos.
+- Informativo do Radar Trader: puxa as notícias e cotações do radar-trader, escolhe até 3 manchetes e abre o Reels com "E mesmo assim… nossos alunos não param de faturar."

@@ -15,7 +15,7 @@ const boardOn=()=>!$('board')||$('board').checked;
 function terminalBg(c,t,layers){ c.fillStyle='#070708'; c.fillRect(0,0,W,H); (layers||[]).forEach(([img,a])=>aiBg(c,img,a,t)); const g=c.createRadialGradient(540,1250,40,540,1250,900); g.addColorStop(0,'rgba(255,106,19,.16)'); g.addColorStop(1,'rgba(255,106,19,0)'); c.fillStyle=g; c.fillRect(0,0,W,H);
   c.save(); c.strokeStyle='rgba(255,255,255,.045)'; c.lineWidth=1; for(let x=0;x<=W;x+=60){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,H); c.stroke(); } for(let y=0;y<=H;y+=60){ c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke(); } c.restore(); logo(c,540,288,250,false,1); }
 function tape(c,t,y,items){ c.save(); c.fillStyle='#111114'; c.fillRect(0,y-30,W,60); c.fillStyle=O; c.fillRect(0,y-30,W,2); c.fillRect(0,y+28,W,2);
-  c.font=fBold(24); const parts=items.map(([s,up])=>({s,up,w:c.measureText(s).width+70})), tot=parts.reduce((a,p)=>a+p.w,0)||1; let x=-((t*120)%tot);
+  c.font=fBold(24); const parts=items.map(([s,up])=>({s,up,w:tw(c,s,fBold(24),2)+70})), tot=parts.reduce((a,p)=>a+p.w,0)||1; let x=-((t*120)%tot);
   for(let rep=0;rep<4&&x<W;rep++) for(const p of parts){ txt(c,p.s,x,y+1,fBold(24),p.up==null?'#C9C6C1':p.up?O:'#E7E5E1','left',2); x+=p.w; } c.restore(); }
 function bearIcon(c,cx,cy,s,a){ if(a<=0) return; c.save(); c.globalAlpha*=a; c.translate(cx,cy); c.scale(s,s); c.strokeStyle='#E7E5E1'; c.lineWidth=7; c.lineJoin='round'; c.lineCap='round';
   c.beginPath(); c.arc(-70,-78,34,0,7); c.stroke(); c.beginPath(); c.arc(70,-78,34,0,7); c.stroke();
@@ -73,7 +73,8 @@ function sceneBoard(c,t){ const B=boardData(), n=B.list.length, show=B.list.slic
 
 /* ---------- encaixe na linha do tempo do Reels ---------- */
 function proScenes(sc){ if(!sc.length) return sc;
-  if(hasMkt()){ const m=mkt(), down=m.ibov!=null&&m.ibov<0; sc.unshift(mkScene('cover',5.6,sceneOpen,[[.05,'swish'],[.3,'type'],[.6,'type'],[1.0,'whoosh'],[1.7,'pop']].concat(down?[[2.85,'impact'],[3.9,'whoosh'],[4.0,'impact'],[4.4,'cash']]:[[2.9,'impact'],[3.5,'cash']]))); }
+  if(hasMkt()&&!(typeof newsOn==='function'&&newsOn())){ const m=mkt(), down=m.ibov!=null&&m.ibov<0; sc.unshift(mkScene('cover',5.6,sceneOpen,[[.05,'swish'],[.3,'type'],[.6,'type'],[1.0,'whoosh'],[1.7,'pop']].concat(down?[[2.85,'impact'],[3.9,'whoosh'],[4.0,'impact'],[4.4,'cash']]:[[2.9,'impact'],[3.5,'cash']]))); }
+  if(typeof newsOn==='function'&&newsOn()) sc.unshift(newsScene());
   if(boardOn()){ const B=boardData(), n=Math.min(10,B.list.length); sc.splice(sc.length-1,0,mkScene('rank',5.0,sceneBoard,[[.05,'type'],[.15,'swish']].concat(Array.from({length:n},(_,k)=>[.5+k*.09,'click'])).concat([[1.8,'pop'],[2.6,'cash']]))); }
   return sc; }
 

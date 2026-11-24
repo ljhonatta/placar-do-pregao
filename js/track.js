@@ -33,10 +33,13 @@ function analyzeTrack(buf){ const sr=buf.sampleRate, n=buf.length, ch=buf.number
   const mean=on.reduce((a,b)=>a+b,0)/F, sd=Math.sqrt(on.reduce((a,b)=>a+(b-mean)*(b-mean),0)/F), impacts=[]; for(let f=1;f<F-1;f++){ if(on[f]>mean+3*sd&&on[f]>=on[f-1]&&on[f]>=on[f+1]&&(!impacts.length||f/100-impacts[impacts.length-1]>.25)) impacts.push(f/100); }
   return {bpm,beat,first,loopStart,loopEnd,dur,impacts,beats:beats.map(b=>+b.toFixed(3))}; }
 
-async function loadTrackFromStore(){ try{ const blob=await Store.getImg(TRACK_KEY); if(!blob) { TRACK=null; return null; } const meta=await Store.get('trackMeta')||{}; const buf=await decodeTrack(blob);
-    const an=meta.bpm&&meta.beats?meta:analyzeTrack(buf); TRACK=Object.assign({name:meta.name||'minha trilha',buf},an); return TRACK; }catch(e){ TRACK=null; return null; } }
+const TRACK_DEFAULT='assets/trilha-padrao.mp3';
+/* trilha do aparelho, se houver; senão a trilha padrão da Trader School que já vem no app */
+async function loadTrackFromStore(){ try{ const blob=await Store.getImg(TRACK_KEY);
+    if(blob){ const meta=await Store.get('trackMeta')||{}; const buf=await decodeTrack(blob); const an=meta.bpm&&meta.beats?meta:analyzeTrack(buf); TRACK=Object.assign({name:meta.name||'minha trilha',buf},an); return TRACK; } }catch(e){}
+  try{ const r=await fetch(TRACK_DEFAULT); if(!r.ok) throw 0; const buf=await decodeTrack(await r.blob()); TRACK=Object.assign({name:'Trilha padrão Trader School',buf,isDefault:true},analyzeTrack(buf)); return TRACK; }catch(e){ TRACK=null; return null; } }
 async function setTrack(file){ const buf=await decodeTrack(file); const an=analyzeTrack(buf); await Store.putImg(TRACK_KEY,file); const meta=Object.assign({name:file.name||'minha trilha'},an); await Store.set('trackMeta',meta); TRACK=Object.assign({buf},meta); return TRACK; }
-async function clearTrack(){ try{ await Store.delImg(TRACK_KEY); await Store.set('trackMeta',null); }catch(e){} TRACK=null; }
+async function clearTrack(){ try{ await Store.delImg(TRACK_KEY); await Store.set('trackMeta',null); }catch(e){} TRACK=null; await loadTrackFromStore(); }
 
 /* toca a trilha no contexto de áudio: começa no tempo 1 e, se o vídeo for mais longo, volta para o trecho de loop no tempo 1 de um compasso */
 function scheduleTrack(ac,out,T,dur){ if(!T||!T.buf) return; const X=.012; let t=0, from=T.first;

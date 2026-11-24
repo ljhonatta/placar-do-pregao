@@ -58,14 +58,14 @@
       </div>
     </div>
     <label class="toggle" hidden><input type="checkbox" id="tickers" checked> Faixas de texto passando em cima e embaixo</label>
-    <fieldset class="amode"><legend>Áudio (.wav separado para o CapCut)</legend>
+    <fieldset class="amode"><legend>Áudio (sai junto no vídeo)</legend>
       <label class="needTrack"><input type="radio" name="amode" value="track" class="needTrack"> Minha trilha + efeitos</label>
       <label class="needTrack"><input type="radio" name="amode" value="trackOnly" class="needTrack"> Só minha trilha</label>
       <label><input type="radio" name="amode" value="music" checked> Música gerada + efeitos</label>
       <label><input type="radio" name="amode" value="sfx"> Só efeitos</label>
       <label><input type="radio" name="amode" value="none"> Sem som</label>
       <div class="trackRow"><span>Minha trilha: <b id="trackName">nenhuma enviada</b></span><label class="btn">Enviar música<input type="file" id="trackIn" accept="audio/*,.mp3,.m4a,.wav" hidden></label><button type="button" class="link" id="trackDel" hidden>Remover</button></div>
-      <p class="note">A música fica salva só neste aparelho (e no backup). O app acha a batida dela e os cortes do vídeo passam a cair no tempo.</p>
+      <p class="note">Já vem com a trilha padrão da Trader School. Os cortes do vídeo caem na batida dela e o MP4 sai pronto, com música e efeitos. Se enviar outra música, ela fica salva só neste aparelho.</p>
     </fieldset>
     <div class="musicRow">
       <label class="vol" id="musicVolLbl">Volume da música <input type="range" id="musicVol" min="0" max="100" value="70"></label>
@@ -99,6 +99,9 @@
       <p class="note">Preencha e o Reels abre com a manchete do dia, o gráfico e o Touro x Urso: urso quando o Ibovespa caiu, touro (o nosso logo) virando o jogo. Use só números reais do dia.</p>
       <label class="fl">Manchete do dia<input type="text" id="mHead" maxlength="140" placeholder="Ex.: Ibovespa recua com tensão no exterior"></label>
       <div class="mrow"><label class="fl">Ibovespa no dia (%)<input type="text" id="mIbov" inputmode="decimal" placeholder="Ex.: -1,20"></label><label class="fl">Dólar no dia (%)<input type="text" id="mUsd" inputmode="decimal" placeholder="Ex.: 0,85"></label></div>
+      <div class="radar"><p class="note"><b>Informativo do Radar Trader:</b> puxa as notícias do dia e abre o vídeo com as manchetes → "E mesmo assim… nossos alunos não param de faturar." Escolha até 3.</p>
+        <div class="radarRow"><button type="button" class="btn" id="radarGet">Puxar notícias do Radar</button><label class="chk"><input type="checkbox" id="newsOn" checked> Informativo no vídeo</label></div>
+        <ul class="newsPick" id="newsPick"></ul></div>
       <button type="button" class="link" id="mClear">Limpar abertura deste dia</button>
     </details>
     <details class="mkt" id="aiBox">
@@ -150,7 +153,7 @@
 <script src="js/v5.js"></script>
 <script src="js/pro.js"></script>
 <script src="js/track.js"></script>
-<script src="js/ocr.js"></script>
+<script src="js/ocr.js"></script><script src="js/mux.js"></script><script src="js/news.js"></script>
 <script src="js/sfx.js"></script>
 <script src="js/caption.js"></script>
 <script src="js/app.js"></script>
