@@ -147,3 +147,6 @@ button:disabled{opacity:.4;cursor:default}
 .removed{margin-top:12px;border:1px dashed rgba(255,255,255,.2);border-radius:12px;padding:10px 14px}
 .removed ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
 .removed li{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+
+.ocrmsg{margin:0;font-size:15px;font-weight:600;line-height:1.35;padding:10px 12px;border-radius:8px;background:rgba(255,106,19,.12);border:1px solid rgba(255,106,19,.35);color:var(--paper)}
+.ocrmsg.warn{background:rgba(255,106,19,.2);color:var(--accent)}

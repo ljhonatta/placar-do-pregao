@@ -64,3 +64,8 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - Remover aluno agora pede confirmação.
 - Lista "Alunos removidos": resultados de quem saiu da turma ficam guardados e dá para restaurar com um toque.
 - Restauração automática do Marcos Biroh Biroh (removido sem querer), com os resultados salvos.
+
+## v5.4.0
+- Leitura do print reforçada para o celular: com a chave da OpenAI salva no app, a IA lê primeiro (cerca de 1 s); sem chave ou se a IA falhar, o leitor do aparelho assume.
+- Tempo limite em cada etapa: o leitor não fica mais travado em silêncio.
+- A mensagem da leitura aparece na própria linha do aluno, embaixo do print, com progresso e o motivo de qualquer falha.

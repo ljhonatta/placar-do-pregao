@@ -5,8 +5,17 @@
 let OCRW=null, OCRBUSY=Promise.resolve();
 const OCRBASE=()=>new URL('vendor/ocr/',location.href).href;
 function loadScript(src){ return new Promise((ok,err)=>{ if(window.Tesseract) return ok(); const s=document.createElement('script'); s.src=src; s.onload=()=>ok(); s.onerror=err; document.head.appendChild(s); }); }
-async function ocrWorker(){ if(OCRW) return OCRW; await loadScript(OCRBASE()+'tesseract.min.js');
-  OCRW=await Tesseract.createWorker('eng',1,{workerPath:OCRBASE()+'worker.min.js',corePath:OCRBASE(),langPath:OCRBASE()+'lang',gzip:true,workerBlobURL:false,logger:m=>{ try{ if(OCRLOG&&m&&m.status&&/load|initializ/i.test(m.status)) OCRLOG('Preparando o leitor de print… '+Math.round((m.progress||0)*100)+'%'); }catch(e){} }}); return OCRW; }
+const MOBILE=/iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));
+function withTimeout(p,ms,msg){ let t; return Promise.race([p,new Promise((_,rej)=>{ t=setTimeout(()=>rej(Object.assign(new Error(msg),{timeout:true})),ms); })]).finally(()=>clearTimeout(t)); }
+function ocrReset(){ const w=OCRW; OCRW=null; OCRP=null; try{ w&&w.terminate&&w.terminate(); }catch(e){} }
+let OCRP=null;
+async function ocrWorker(){ if(OCRW) return OCRW; if(OCRP) return OCRP;
+  OCRP=(async()=>{ await loadScript(OCRBASE()+'tesseract.min.js');
+    const w=await Tesseract.createWorker('eng',1,{workerPath:OCRBASE()+'worker.min.js',corePath:OCRBASE(),langPath:OCRBASE()+'lang',gzip:true,workerBlobURL:false,
+      errorHandler:e=>{ try{ OCRLOG&&OCRLOG('Erro no leitor: '+(e&&e.message||e)); }catch(x){} },
+      logger:m=>{ try{ if(!OCRLOG||!m||!m.status) return; if(/load|initializ/i.test(m.status)) OCRLOG('Preparando o leitor de print… '+Math.round((m.progress||0)*100)+'%'); else if(/recogniz/i.test(m.status)) OCRLOG('Lendo o print… '+Math.round((m.progress||0)*100)+'%'); }catch(e){} }});
+    OCRW=w; return w; })();
+  try{ return await withTimeout(OCRP,MOBILE?120000:90000,'o leitor de print demorou demais para carregar (internet lenta?)'); }catch(e){ ocrReset(); throw e; } }
 let OCRLOG=null;
 /* prepara o recorte: tons de cinza, texto escuro sobre fundo claro, contraste esticado, ampliado */
 function ocrCanvas(src,sx,sy,sw,sh,scale){ const c=document.createElement('canvas'); c.width=Math.max(8,Math.round(sw*scale)); c.height=Math.max(8,Math.round(sh*scale)); const g=c.getContext('2d'); g.imageSmoothingQuality='high'; g.drawImage(src,sx,sy,sw,sh,0,0,c.width,c.height);
@@ -31,14 +40,14 @@ function ocrPass(data,cv){ const lines=(data.lines||[]).map(l=>({text:l.text.rep
   const cands=[]; lines.forEach(ln=>moneyIn(ln.text).forEach(m=>{ if(/R\s?\$/.test(ln.text)&&m.v>0&&m.v<100000) cands.push(Object.assign({value:m.v,neg:false},where(ln,m))); }));
   const uniq=[...new Map(cands.map(c=>[c.value,c])).values()]; if(uniq.length===1) return Object.assign(uniq[0],{src:'valor do painel'});
   return dia?Object.assign(dia,{src:'Res. do Dia'}):null; }
-function ocrAuto(img){ return run(async()=>{ const W0=imgW(img), H0=imgH(img), sc=Math.min(2,2200/Math.max(W0,H0)), cv=ocrCanvas(img,0,0,W0,H0,sc), w=await ocrWorker();
-  for(const psm of ['6','11']){ await w.setParameters({tessedit_pageseg_mode:psm,tessedit_char_whitelist:''}); const {data}=await w.recognize(cv); const r=ocrPass(data,cv); if(r&&r.value>0) return r; }
+function ocrAuto(img){ return run(async()=>{ const W0=imgW(img), H0=imgH(img), sc=Math.min(2,(MOBILE?1600:2200)/Math.max(W0,H0)), cv=ocrCanvas(img,0,0,W0,H0,sc), w=await ocrWorker();
+  for(const psm of ['6','11']){ await w.setParameters({tessedit_pageseg_mode:psm,tessedit_char_whitelist:''}); let data; try{ ({data}=await withTimeout(w.recognize(cv),MOBILE?60000:40000,'a leitura do print demorou demais')); }catch(e){ ocrReset(); throw e; } const r=ocrPass(data,cv); if(r&&r.value>0) return r; }
   return null; }); }
 
 /* lê o número no ponto tocado (fx, fy de 0 a 1) */
 function ocrAt(img,fx,fy){ return run(async()=>{ const W0=imgW(img), H0=imgH(img), bh=Math.max(24,H0*.06), x0=Math.max(0,fx*W0-W0*.30), x1=Math.min(W0,fx*W0+W0*.34), y0=Math.max(0,fy*H0-bh/2), sh=Math.min(H0-y0,bh);
   const sc=Math.max(1,Math.min(5,70/sh)), cv=ocrCanvas(img,x0,y0,x1-x0,sh,sc), w=await ocrWorker(); await w.setParameters({tessedit_pageseg_mode:'7',tessedit_char_whitelist:'0123456789R$.,- '});
-  const {data}=await w.recognize(cv), ms=moneyIn(data.text); if(!ms.length) return null; const tx=(fx*W0-x0)/(x1-x0), n=data.text.length||1; ms.sort((a,b)=>Math.abs(a.i/n-tx)-Math.abs(b.i/n-tx)); const m=ms[0]; return {value:Math.abs(m.v),neg:m.v<0,src:'toque'}; }); }
+  let data; try{ ({data}=await withTimeout(w.recognize(cv),30000,'a leitura demorou demais')); }catch(e){ ocrReset(); throw e; } const ms=moneyIn(data.text); if(!ms.length) return null; const tx=(fx*W0-x0)/(x1-x0), n=data.text.length||1; ms.sort((a,b)=>Math.abs(a.i/n-tx)-Math.abs(b.i/n-tx)); const m=ms[0]; return {value:Math.abs(m.v),neg:m.v<0,src:'toque'}; }); }
 
 /* leitura com IA (OpenAI), quando há chave salva neste aparelho: lê qualquer layout de print */
 function imgToJpeg(img,max=1400){ const w=imgW(img), h=imgH(img), s=Math.min(1,max/Math.max(w,h)), c=document.createElement('canvas'); c.width=Math.round(w*s); c.height=Math.round(h*s); c.getContext('2d').drawImage(img,0,0,c.width,c.height); return c.toDataURL('image/jpeg',.88); }
@@ -47,9 +56,11 @@ async function aiRead(img,key){ const prompt='Este é um print de uma plataforma
   const j=await r.json().catch(()=>({})); if(!r.ok) throw Object.assign(new Error((j.error&&j.error.message)||('HTTP '+r.status)),{status:r.status});
   let d={}; try{ d=JSON.parse(j.choices[0].message.content); }catch(e){} const v=typeof d.valor==='string'?parseFloat(d.valor.replace(/\./g,'').replace(',','.')):d.valor;
   if(!(v>0)) return null; const ok=x=>typeof x==='number'&&x>=0&&x<=1; return {value:Math.abs(v),fx:ok(d.x)?d.x:null,fy:ok(d.y)?d.y:null,src:(d.campo&&d.campo!=='outro'?d.campo:'print')+' (IA)'}; }
-/* leitura completa: primeiro no aparelho; se não achar (ou o leitor não carregar) e houver chave, usa a IA */
-async function readPrint(img,log){ OCRLOG=log||null; let r=null, err=null;
-  try{ r=await ocrAuto(img); }catch(e){ err=e; }
-  if(!(r&&r.value>0)){ let key=''; try{ key=localStorage.getItem('placar:openai')||''; }catch(e){}
-    if(key){ log&&log('Lendo o print com IA…'); try{ r=await aiRead(img,key); }catch(e){ err=e; } } }
-  OCRLOG=null; if(r&&r.value>0) return r; if(err) throw err; return null; }
+/* leitura completa: com chave da OpenAI salva, a IA lê primeiro (mais rápida e lê qualquer layout, ideal no celular);
+   sem chave ou se a IA falhar, o leitor do próprio aparelho assume. */
+async function readPrint(img,log){ OCRLOG=log||null; let r=null; const errs=[]; let key=''; try{ key=(localStorage.getItem('placar:openai')||'').trim(); }catch(e){}
+  try{
+    if(key){ log&&log('Lendo o print com IA…'); try{ r=await withTimeout(aiRead(img,key),45000,'a IA demorou demais'); }catch(e){ errs.push('IA: '+(e&&e.message||e)); } }
+    if(!(r&&r.value>0)){ if(key) log&&log('Tentando o leitor do aparelho…'); try{ r=await ocrAuto(img); }catch(e){ errs.push('leitor: '+(e&&e.message||e)); } }
+  } finally{ OCRLOG=null; }
+  if(r&&r.value>0) return r; if(errs.length) throw new Error(errs.join(' · ')); return null; }
