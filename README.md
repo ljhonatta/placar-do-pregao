@@ -74,3 +74,8 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - O vídeo sai num MP4 só, com a trilha e os efeitos sincronizados. Quando o navegador não grava o som direto (iPhone), o app junta vídeo e áudio no próprio aparelho com o ffmpeg.wasm (baixado uma vez, ~10 MB).
 - Trilha padrão da Trader School embutida (assets/trilha-padrao.mp3), ativa por padrão em todos os aparelhos.
 - Informativo do Radar Trader: puxa as notícias e cotações do radar-trader, escolhe até 3 manchetes e abre o Reels com "E mesmo assim… nossos alunos não param de faturar."
+
+## v5.6.0
+- Nova trilha padrão (60 s, ~91 BPM), substituindo a anterior; o modo padrão passa a ser "Só minha trilha" (sem os efeitos sintéticos).
+- Os cortes caem na batida e a última cena termina no tempo 1 de um compasso; a trilha some sob o encerramento.
+- Encerramento da marca (logo Trader School, 2,5 s, com o som original) no fim de todos os vídeos, com transição suave. Pode ser desligado.

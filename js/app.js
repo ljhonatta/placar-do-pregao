@@ -1,6 +1,6 @@
 /* Placar do Pregão — estado, painel, salvamento no aparelho, exportação e atualização do app. */
 'use strict';
-const APP_VERSION='5.5.0';
+const APP_VERSION='5.6.0';
 try{ document.getElementById('ver').textContent='v'+APP_VERSION; }catch(e){}
 
 /* ---------- turma padrão ---------- */
@@ -75,7 +75,8 @@ let AC=null, ASRC=null, musicSeed=0;
 try{ musicSeed=+(localStorage.getItem('placar:musicSeed')||0)||0; }catch(e){}
 let audioMode='music';
 const trackSync=()=>!!(typeof TRACK!=='undefined'&&TRACK&&(audioMode==='track'||audioMode==='trackOnly'));
-function musicOpts(){ return {mode:audioMode,track:trackSync()?TRACK:null,music:audioMode==='music',vol:$('musicVol')?(+$('musicVol').value)/100:.7,seed:musicSeed,plan:musicPlan()}; }
+function outroOpt(){ const n=SCENES.length; if(!n||!SCENES[n-1].isOutro||typeof OUTRO==='undefined'||!OUTRO.buf) return null; return {buf:OUTRO.buf,at:sceneStart(n-1)}; }
+function musicOpts(){ return {mode:audioMode,track:trackSync()?TRACK:null,music:audioMode==='music',vol:$('musicVol')?(+$('musicVol').value)/100:.7,seed:musicSeed,plan:musicPlan(),outro:outroOpt()}; }
 const sfxOn=()=>audioMode!=='none';
 function stopSound(){ try{ if(ASRC) ASRC.stop(); }catch(e){} ASRC=null; }
 function runTimeline(startAt=0,sound=false){ const id=++loopId, D=dur(); let t0=null; stopSound();
@@ -238,6 +239,7 @@ try{ if(localStorage.getItem('placar:tickers')==='0') $('tickers').checked=false
 try{ const v=localStorage.getItem('placar:musicVol'); if(v) $('musicVol').value=v; }catch(e){}
 try{ if(localStorage.getItem('placar:parcial')==='0') $('parcial').checked=false; if(localStorage.getItem('placar:board')==='0') $('board').checked=false; }catch(e){}
 $('board').onchange=()=>{ try{ localStorage.setItem('placar:board',$('board').checked?'1':'0'); }catch(e){} stopSound(); preview(); };
+$('outro').checked=outroOn(); $('outro').onchange=()=>{ try{ localStorage.setItem('placar:outro',$('outro').checked?'1':'0'); }catch(e){} stopSound(); preview(); };
 /* abertura do pregão: manchete e variações do dia (chave própria, não mexe nos resultados) */
 let mktTimer=0;
 function mktFill(){ const d=days[curDay]&&days[curDay].date, m=(d&&MARKET[d])||{}; $('mHead').value=m.head||''; $('mIbov').value=m.ibov||''; $('mUsd').value=m.usd||''; $('mktState').textContent=(m.head||m.ibov||m.usd)?'(ligada neste dia)':'(opcional)'; }
@@ -308,7 +310,9 @@ $('trackIn').onchange=async ev=>{ const f=ev.target.files[0]; ev.target.value=''
   catch(e){ status('Não consegui ler esse arquivo de áudio. Envie MP3, M4A ou WAV.',true); } };
 $('trackDel').onclick=async()=>{ await clearTrack(); trackInfo(); applyAudioMode(TRACK?'track':'music'); Store.set('audioMode',audioMode).catch(()=>{}); stopSound(); preview(); status(TRACK?'Voltou para a trilha padrão da Trader School.':'Trilha removida deste aparelho.'); };
 applyAudioMode('music'); trackInfo();
-(async()=>{ await loadTrackFromStore(); trackInfo(); let m=null; try{ m=await Store.get('audioMode'); }catch(e){} let first=false; try{ first=!localStorage.getItem('placar:trilhaPadrao'); localStorage.setItem('placar:trilhaPadrao','1'); }catch(e){} if(first&&TRACK) m='track'; applyAudioMode(m||(TRACK?'track':'music')); if(first&&TRACK) Store.set('audioMode',audioMode).catch(()=>{}); if(TRACK&&loaded) preview(); })();
+(async()=>{ let first=false; try{ first=localStorage.getItem('placar:trilhaPadrao')!=='2'; }catch(e){}
+  /* v5.6: a nova trilha padrão substitui a música antiga enviada neste aparelho */ if(first){ try{ await Store.delImg(TRACK_KEY); await Store.set('trackMeta',null); }catch(e){} }
+  await loadTrackFromStore(); trackInfo(); let m=null; try{ m=await Store.get('audioMode'); }catch(e){} if(first&&TRACK) m='trackOnly'; applyAudioMode(m||(TRACK?'track':'music')); if(first&&TRACK){ try{ await Store.set('audioMode',audioMode); localStorage.setItem('placar:trilhaPadrao','2'); }catch(e){} } if(TRACK&&loaded) preview(); })();
 $('musicVol').oninput=()=>{ try{ localStorage.setItem('placar:musicVol',$('musicVol').value); }catch(e){} };
 $('musicSeed').onclick=()=>{ musicSeed=(musicSeed+1)%97; try{ localStorage.setItem('placar:musicSeed',musicSeed); }catch(e){} status('Trilha: variação '+(musicSeed+1)+'. Toque em "Tocar prévia" para ouvir.'); };
 

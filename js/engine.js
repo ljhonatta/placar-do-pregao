@@ -879,11 +879,11 @@ function beatDur(base){ const bpm=D.bpm||100, beats=Math.max(8,Math.round(base*b
 function mkScene(kind,base,fn,cues){ const o={kind,base,dur:beatDur(base),raw:cues||[]}; o.render=(c,u)=>fn(c,u*o.base/o.dur); o.cues=o.raw.map(([t,n])=>[t*o.dur/o.base,n]); return o; }
 /* final: o contador termina no tempo 1 do 2º compasso; softRiser antes e chime no valor */
 function outScene(kind,base,fn,cues){ const d=beatDur(base); OUTB=(60/(D.bpm||100))*base/d; const ce=4*OUTB, sk=base/d; const o=mkScene(kind,base,fn,(cues||[]).concat([[ce-.95*sk,'riser'],[ce,'cash'],[ce+.02,'impact']])); o.isOut=true; return o; }
-function buildScenes(){ let sc=buildScenesBase(); if(typeof proScenes==='function') sc=proScenes(sc); if(typeof trackSync==='function'&&trackSync()&&TRACK.beats) retimeToTrack(sc); return sc; }
+function buildScenes(){ let sc=buildScenesBase(); if(typeof proScenes==='function') sc=proScenes(sc); if(typeof trackSync==='function'&&trackSync()&&TRACK.beats) retimeToTrack(sc); if(sc.length&&typeof outroOn==='function'&&outroOn()&&OUTRO.ready) sc.push(outroScene()); return sc; }
 /* com a trilha própria: cada cena começa e termina numa batida real da música (o andamento pode variar um pouco) */
 function retimeToTrack(sc){ const est=sc.reduce((a,s)=>a+s.dur,0)*1.3+20, B=videoBeats(TRACK,est), avg=60/TRACK.bpm; let idx=0;
   const at=i=>i<B.length?B[i]:B[B.length-1]+(i-B.length+1)*avg;
-  sc.forEach(o=>{ const nb=Math.max(4,Math.round(o.dur/avg)), d=at(idx+nb)-at(idx); o.dur=d; o.cues=o.raw.map(([t,n])=>[t*o.dur/o.base,n]); if(o.isOut) OUTB=(d/nb)*o.base/d; idx+=nb; }); }
+  sc.forEach((o,k)=>{ let nb=Math.max(4,Math.round(o.dur/avg)); if(k===sc.length-1){ const r=(idx+nb)%4; nb+=(r>=2||nb-r<4)?(4-r)%4:-r; } const d=at(idx+nb)-at(idx); o.dur=d; o.cues=o.raw.map(([t,n])=>[t*o.dur/o.base,n]); if(o.isOut) OUTB=(d/nb)*o.base/d; idx+=nb; }); }
 function buildScenesBase(){
   if(MODE==='parcial') return buildParcial();
   if(MODE==='week') return buildWeek5();
@@ -907,6 +907,8 @@ function draw(t){
   if(V5()) bg5(ctx,t); else paper(ctx,t); topMark(ctx);
   if(!SCENES.length){ txt(ctx,MODE==='week'?'Sem resultados na semana':MODE==='parcial'?'Sem resultados de segunda a quarta':'Marque quem operou hoje',540,960,fSerif(54),P.grey,'center'); grain(ctx,t); return guides(); }
   let k=0, st=0; while(k<SCENES.length-1&&t>=st+SCENES[k].dur){ st+=SCENES[k].dur; k++; } const sc=SCENES[k], local=Math.min(t-st,sc.dur);
+  if(sc.isOutro){ const a=k>0?eo(Math.min(1,local/.45)):1; if(a<1){ ctx.save(); SCENES[k-1].render(ctx,SCENES[k-1].dur); ctx.restore(); ctx.setTransform(Q,0,0,Q,0,0); }
+    ctx.save(); ctx.globalAlpha=a; const z=1+.08*(1-a); ctx.translate(540,960); ctx.scale(z,z); ctx.translate(-540,-960); sc.render(ctx,local); ctx.restore(); ctx.setTransform(Q,0,0,Q,0,0); ctx.globalAlpha=1; return guides(); }
   if(k>0&&local<TR){ const pv=SCENES[k-1]; renderTo(sA,pv,pv.dur); renderTo(sB,sc,local); ctx.setTransform(Q,0,0,Q,0,0); if(V5()) trans5(local/TR); else transition(local/TR); }
   else { ctx.save(); sc.render(ctx,local); ctx.restore(); }
   ctx.setTransform(Q,0,0,Q,0,0); ctx.globalAlpha=1;
@@ -929,7 +931,7 @@ function computeWeek(){
 }
 async function prepare(){
   MODE=curDay==='sab'?'week':(curDay==='qua'&&parcialOn())?'parcial':'day';
-  useDay(curDay);
+  useDay(curDay); if(typeof loadOutro==='function') await loadOutro();
   await Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{})));
   await loadLogo();
   if(MODE==='parcial'){ await prepareParcial(); S=[]; }

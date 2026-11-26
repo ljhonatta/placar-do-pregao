@@ -165,7 +165,7 @@ const SFX=(()=>{
     }
   }
   let last={key:'',buf:null};
-  async function render(cues,dur,day,opt={}){ const K=KITS[day]||KITS.seg; if(opt.mode==='none') return null; const trk=(opt.mode==='track'||opt.mode==='trackOnly')&&opt.track&&opt.track.buf?opt.track:null, mus=!trk&&!!(opt.music&&opt.plan&&opt.plan.sections.length), vol=opt.vol==null?.7:opt.vol, key=(trk?'T'+opt.mode+trk.name+trk.bpm:'')+(day||'')+dur.toFixed(2)+'|'+(mus?'m'+vol+'s'+(opt.seed||0):'')+'|'+cues.map(q=>q.k+q.t.toFixed(2)).join(','); if(last.key===key&&last.buf) return last.buf;
+  async function render(cues,dur,day,opt={}){ const K=KITS[day]||KITS.seg; if(opt.mode==='none') return null; const trk=(opt.mode==='track'||opt.mode==='trackOnly')&&opt.track&&opt.track.buf?opt.track:null, mus=!trk&&!!(opt.music&&opt.plan&&opt.plan.sections.length), vol=opt.vol==null?.7:opt.vol, key=(trk?'T'+opt.mode+trk.name+trk.bpm:'')+(day||'')+dur.toFixed(2)+'|'+(mus?'m'+vol+'s'+(opt.seed||0):'')+'|'+cues.map(q=>q.k+q.t.toFixed(2)).join(',')+(opt.outro?'|O'+opt.outro.at.toFixed(2):''); if(last.key===key&&last.buf) return last.buf;
     const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext; if(!OAC) return null;
     const ac=new OAC(2,Math.ceil((dur+.5)*SR),SR);
     const comp=ac.createDynamicsCompressor(); comp.threshold.value=-18; comp.knee.value=8; comp.ratio.value=5; comp.attack.value=.003; comp.release.value=.18;
@@ -180,7 +180,8 @@ const SFX=(()=>{
       const DUCK={cash:1,impact:1,boom:1,trans:1,stamp:1}, base=vol*.62; let lastT=-1; cues.filter(q=>DUCK[q.k]).map(q=>q.t).sort((a,b)=>a-b).forEach(t=>{ if(t-lastT<.32) return; lastT=t; mg.gain.setValueAtTime(base,Math.max(0,t-.01)); mg.gain.linearRampToValueAtTime(base*.5,t+.01); mg.gain.setValueAtTime(base*.5,t+.15); mg.gain.linearRampToValueAtTime(base,t+.3); }); }
     if(trk){ const base=vol*(opt.mode==='trackOnly'?1:.85), mg=ac.createGain(); mg.gain.value=base; mg.connect(master); scheduleTrack(ac,mg,trk,dur);
       if(opt.mode!=='trackOnly'){ const DUCK={cash:1,impact:1,boom:1,trans:1,stamp:1}; let lastT=-1; cues.filter(q=>DUCK[q.k]).map(q=>q.t).sort((a,b)=>a-b).forEach(t=>{ if(t-lastT<.32) return; lastT=t; mg.gain.setValueAtTime(base,Math.max(0,t-.01)); mg.gain.linearRampToValueAtTime(base*.6,t+.01); mg.gain.setValueAtTime(base*.6,t+.15); mg.gain.linearRampToValueAtTime(base,t+.3); }); }
-      mg.gain.setValueAtTime(base,Math.max(0,dur-1.2)); mg.gain.linearRampToValueAtTime(0.0001,dur+.4); }
+      const fe=opt.outro?opt.outro.at:dur; if(opt.outro){ mg.gain.setValueAtTime(base,Math.max(0,fe-.15)); mg.gain.linearRampToValueAtTime(0.0001,fe+.9); } else { mg.gain.setValueAtTime(base,Math.max(0,dur-1.2)); mg.gain.linearRampToValueAtTime(0.0001,dur+.4); } }
+    if(opt.outro&&opt.outro.buf){ const s=ac.createBufferSource(); s.buffer=opt.outro.buf; const g=ac.createGain(); g.gain.value=.9; s.connect(g).connect(master); s.start(Math.max(0,opt.outro.at)); }
     const buf=await ac.startRendering(); last={key,buf}; return buf; }
 
   /* WAV 16 bits estéreo 48 kHz — abre no CapCut, no celular e no computador */
