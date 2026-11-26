@@ -79,3 +79,7 @@ O app busca a versão mais nova sempre que abre com internet. Ao publicar uma mu
 - Nova trilha padrão (60 s, ~91 BPM), substituindo a anterior; o modo padrão passa a ser "Só minha trilha" (sem os efeitos sintéticos).
 - Os cortes caem na batida e a última cena termina no tempo 1 de um compasso; a trilha some sob o encerramento.
 - Encerramento da marca (logo Trader School, 2,5 s, com o som original) no fim de todos os vídeos, com transição suave. Pode ser desligado.
+
+## v5.7.0
+- Efeitos sonoros reais da marca (assets/sfx): impactos (4, alternando) no corte de cada transição, caixa registradora quando o resultado aparece e notificação nos destaques. Cada som entra com o pico no momento da imagem.
+- Padrão volta a ser "Minha trilha + efeitos", agora com esses sons no lugar dos sintéticos.

@@ -165,7 +165,7 @@ const SFX=(()=>{
     }
   }
   let last={key:'',buf:null};
-  async function render(cues,dur,day,opt={}){ const K=KITS[day]||KITS.seg; if(opt.mode==='none') return null; const trk=(opt.mode==='track'||opt.mode==='trackOnly')&&opt.track&&opt.track.buf?opt.track:null, mus=!trk&&!!(opt.music&&opt.plan&&opt.plan.sections.length), vol=opt.vol==null?.7:opt.vol, key=(trk?'T'+opt.mode+trk.name+trk.bpm:'')+(day||'')+dur.toFixed(2)+'|'+(mus?'m'+vol+'s'+(opt.seed||0):'')+'|'+cues.map(q=>q.k+q.t.toFixed(2)).join(',')+(opt.outro?'|O'+opt.outro.at.toFixed(2):''); if(last.key===key&&last.buf) return last.buf;
+  async function render(cues,dur,day,opt={}){ const K=KITS[day]||KITS.seg; if(opt.mode==='none') return null; const trk=(opt.mode==='track'||opt.mode==='trackOnly')&&opt.track&&opt.track.buf?opt.track:null, mus=!trk&&!!(opt.music&&opt.plan&&opt.plan.sections.length), vol=opt.vol==null?.7:opt.vol, key=(trk?'T'+opt.mode+trk.name+trk.bpm:'')+(day||'')+dur.toFixed(2)+'|'+(mus?'m'+vol+'s'+(opt.seed||0):'')+'|'+cues.map(q=>q.k+q.t.toFixed(2)).join(',')+(opt.outro?'|O'+opt.outro.at.toFixed(2):'')+(opt.samples?'|S':''); if(last.key===key&&last.buf) return last.buf;
     const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext; if(!OAC) return null;
     const ac=new OAC(2,Math.ceil((dur+.5)*SR),SR);
     const comp=ac.createDynamicsCompressor(); comp.threshold.value=-18; comp.knee.value=8; comp.ratio.value=5; comp.attack.value=.003; comp.release.value=.18;
@@ -173,7 +173,9 @@ const SFX=(()=>{
     const master=ac.createGain(); master.gain.value=.8; master.connect(comp); comp.connect(lim); lim.connect(ac.destination);
     const rev=ac.createConvolver(); rev.buffer=impulse(ac,1.4,3); const rg=ac.createGain(); rg.gain.value=.55; rev.connect(rg).connect(master);
     const fx=ac.createGain(); fx.gain.value=.5; fx.connect(master); const X={ac,nb:noiseBuf(ac,3),o:(wet=.2,p=0)=>{ const g=ac.createGain(); let n=g; if(p&&ac.createStereoPanner){ const pn=ac.createStereoPanner(); pn.pan.value=p; g.connect(pn); n=pn; } n.connect(fx); if(wet>0){ const w=ac.createGain(); w.gain.value=wet*.5; n.connect(w); w.connect(rev); } return g; }};
-    if(opt.mode!=='trackOnly') cues.forEach(q=>{ const name=K[q.k]||'softTick', f=V[name]; if(f&&q.t>=0&&q.t<=dur) try{ f(X,Math.max(.002,q.t)); }catch(e){} });
+    const useS=!!(opt.samples&&opt.mode!=='trackOnly');
+    if(useS){ const sg=ac.createGain(); sg.gain.value=1; sg.connect(master); samplePlan(cues,opt.outro?opt.outro.at:null).forEach(o=>{ const b=opt.samples.buf[o.n]; if(!b||o.at>dur) return; const s=ac.createBufferSource(); s.buffer=b; const g=ac.createGain(); g.gain.value=o.g; s.connect(g).connect(sg); s.start(o.at); }); }
+    else if(opt.mode!=='trackOnly') cues.forEach(q=>{ const name=K[q.k]||'softTick', f=V[name]; if(f&&q.t>=0&&q.t<=dur) try{ f(X,Math.max(.002,q.t)); }catch(e){} });
     if(mus){ const mg=ac.createGain(); mg.gain.value=vol*.62; mg.connect(master); const MX={ac,nb:X.nb,o:(wet=.2,p=0)=>{ const g=ac.createGain(); let n=g; if(p&&ac.createStereoPanner){ const pn=ac.createStereoPanner(); pn.pan.value=p; g.connect(pn); n=pn; } n.connect(mg); if(wet>0){ const w=ac.createGain(); w.gain.value=wet; n.connect(w); w.connect(rev); } return g; }};
       const mo=MX.o(0,0); try{ renderMusic(MX,mo,opt.plan,day||'seg',opt.seed||0); }catch(e){}
       /* ducking: a música abaixa ~6 dB sob os efeitos importantes */

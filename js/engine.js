@@ -931,7 +931,7 @@ function computeWeek(){
 }
 async function prepare(){
   MODE=curDay==='sab'?'week':(curDay==='qua'&&parcialOn())?'parcial':'day';
-  useDay(curDay); if(typeof loadOutro==='function') await loadOutro();
+  useDay(curDay); if(typeof loadOutro==='function') await loadOutro(); if(typeof loadSamples==='function') await loadSamples();
   await Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{})));
   await loadLogo();
   if(MODE==='parcial'){ await prepareParcial(); S=[]; }
